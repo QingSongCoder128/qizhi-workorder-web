@@ -74,3 +74,8 @@ export function getCurrentUser() {
 export function updateProfile(data) {
   return request.put('/api/v1/user/profile', data)
 }
+
+// 按角色编码查询用户列表（供审批转交/加签选择审批人）
+export function getUsersByRole(roleCode) {
+  return request.get('/api/v1/user/by-role', { params: { roleCode } })
+}
