@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { isLoggedIn } from '@/utils/auth'
+import { useUserStore } from '@/store/user'
 
 const routes = [
   {
@@ -112,12 +113,24 @@ const router = createRouter({
 })
 
 // 导航守卫
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   if (to.meta.public) {
     next()
   } else if (!isLoggedIn()) {
     next('/login')
   } else {
+    // 页面刷新后 Pinia 状态丢失，需从后端恢复用户信息
+    const userStore = useUserStore()
+    if (!userStore.role) {
+      try {
+        await userStore.fetchUserInfo()
+      } catch {
+        // 会话过期，跳转登录
+        userStore.logout()
+        next('/login')
+        return
+      }
+    }
     next()
   }
 })
