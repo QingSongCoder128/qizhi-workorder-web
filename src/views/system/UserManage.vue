@@ -13,14 +13,14 @@
         <el-table-column prop="phone" label="手机号" width="130" />
         <el-table-column prop="status" label="状态" width="80">
           <template #default="{ row }">
-            <el-tag :type="row.status === 1 ? 'success' : 'danger'" size="small">{{ row.status === 1 ? '启用' : '禁用' }}</el-tag>
+            <el-tag :type="row.status === 'ENABLED' ? 'success' : 'danger'" size="small">{{ row.status === 'ENABLED' ? '启用' : '禁用' }}</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="操作" width="200">
           <template #default="{ row }">
             <el-button link type="primary" @click="openDialog(row)">编辑</el-button>
             <el-button link type="warning" @click="handleReset(row)">重置密码</el-button>
-            <el-button link :type="row.status === 1 ? 'danger' : 'success'" @click="handleToggle(row)">{{ row.status === 1 ? '禁用' : '启用' }}</el-button>
+            <el-button link :type="row.status === 'ENABLED' ? 'danger' : 'success'" @click="handleToggle(row)">{{ row.status === 'ENABLED' ? '禁用' : '启用' }}</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -38,12 +38,12 @@
         <el-form-item label="邮箱"><el-input v-model="form.email" /></el-form-item>
         <el-form-item label="部门">
           <el-select v-model="form.deptCode" style="width: 100%;">
-            <el-option v-for="d in deptList" :key="d.code" :label="d.name" :value="d.code" />
+            <el-option v-for="d in deptList" :key="d.deptCode" :label="d.deptName" :value="d.deptCode" />
           </el-select>
         </el-form-item>
         <el-form-item label="角色">
           <el-select v-model="form.roleCode" style="width: 100%;">
-            <el-option v-for="r in roleList" :key="r.code" :label="r.name" :value="r.code" />
+            <el-option v-for="r in roleList" :key="r.roleCode" :label="r.roleName" :value="r.roleCode" />
           </el-select>
         </el-form-item>
       </el-form>
@@ -111,7 +111,7 @@ async function handleReset(row) {
 
 async function handleToggle(row) {
   try {
-    await toggleUserStatus(row.id, row.status === 1 ? 0 : 1)
+    await toggleUserStatus(row.id, row.status === 'ENABLED' ? 0 : 1)
     fetchList()
   } catch {}
 }

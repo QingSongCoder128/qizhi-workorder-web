@@ -66,7 +66,7 @@ async function fetchList() {
   loading.value = true
   try {
     const res = await getTemplateList()
-    templates.value = res.data || []
+    templates.value = res.data?.records || res.data || []
   } catch {} finally { loading.value = false }
 }
 

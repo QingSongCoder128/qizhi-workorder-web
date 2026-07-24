@@ -10,9 +10,9 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item label="关联部门" prop="deptCode">
-          <el-select v-model="form.deptCode" placeholder="请选择关联部门" style="width: 100%;">
-            <el-option v-for="d in deptList" :key="d.code" :label="d.name" :value="d.code" />
+        <el-form-item label="关联部门" prop="departmentCode">
+          <el-select v-model="form.departmentCode" placeholder="请选择关联部门" style="width: 100%;">
+            <el-option v-for="d in deptList" :key="d.deptCode" :label="d.deptName" :value="d.deptCode" />
           </el-select>
         </el-form-item>
 
@@ -57,7 +57,7 @@ const deptList = ref([])
 
 const form = reactive({
   type: '',
-  deptCode: '',
+  departmentCode: '',
   title: '',
   detail: '',
   urgent: false,
@@ -66,7 +66,7 @@ const form = reactive({
 
 const rules = {
   type: [{ required: true, message: '请选择工单类型', trigger: 'change' }],
-  deptCode: [{ required: true, message: '请选择关联部门', trigger: 'change' }],
+  departmentCode: [{ required: true, message: '请选择关联部门', trigger: 'change' }],
   title: [{ required: true, message: '请输入标题', trigger: 'blur' }],
   detail: [{ required: true, message: '请输入详情描述', trigger: 'blur' }]
 }

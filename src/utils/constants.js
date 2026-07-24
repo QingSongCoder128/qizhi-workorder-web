@@ -5,12 +5,14 @@ export const ORDER_STATUS = {
   APPROVING: { label: '审批中', color: '#409EFF' },
   COMPLETED: { label: '已完结', color: '#67C23A' },
   REJECTED: { label: '已驳回', color: '#F56C6C' },
+  CANCELLED: { label: '已撤销', color: '#909399' },
   REVOKED: { label: '已撤销', color: '#909399' }
 }
 
 // 工单类型
 export const ORDER_TYPE = {
   OPS_REPAIR: { label: '运维报修', icon: 'SetUp' },
+  MAINTENANCE: { label: '运维报修', icon: 'SetUp' },
   ADMIN_PURCHASE: { label: '行政采购', icon: 'ShoppingCart' },
   HR_LEAVE: { label: '人事请假', icon: 'Calendar' },
   TECH_REQUEST: { label: '技术需求', icon: 'Monitor' }
