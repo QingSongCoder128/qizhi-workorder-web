@@ -40,6 +40,11 @@ export function getTemplateList() {
   return request.get('/api/v1/approve/template/list')
 }
 
+// 获取模板的审批节点（approval_node 表，审批流真实数据源）
+export function getTemplateNodes(id) {
+  return request.get(`/api/v1/approve/template/${id}/nodes`)
+}
+
 // 创建审批模板
 export function createTemplate(data) {
   return request.post('/api/v1/approve/template', data)

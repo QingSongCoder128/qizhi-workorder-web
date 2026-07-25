@@ -1,54 +1,127 @@
 <template>
   <div class="page-container">
-    <el-page-header @back="$router.back()" content="审批操作" style="margin-bottom: 20px;" />
+    <el-page-header @back="$router.back()" class="approve-page-header">
+      <template #content>
+        <div class="header-content">
+          <span class="header-title">审批操作</span>
+          <el-tag v-if="detail.priority === 'URGENT'" type="danger" size="small" effect="dark">紧急</el-tag>
+          <el-tag v-if="detail.status" :type="ORDER_STATUS[detail.status]?.tag" size="small">
+            {{ ORDER_STATUS[detail.status]?.label || detail.status }}
+          </el-tag>
+        </div>
+      </template>
+    </el-page-header>
 
     <div v-loading="loading">
-      <!-- 工单信息 -->
-      <div class="page-card" style="margin-bottom: 16px;">
-        <h4>工单信息</h4>
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="工单编号">{{ detail.orderNo }}</el-descriptions-item>
-          <el-descriptions-item label="优先级"><PriorityTag v-if="detail.priority" :priority="detail.priority" /></el-descriptions-item>
-          <el-descriptions-item label="标题">{{ detail.title }}</el-descriptions-item>
-          <el-descriptions-item label="提交人">{{ detail.submitterName }}</el-descriptions-item>
-          <el-descriptions-item label="详情" :span="2">{{ detail.detail }}</el-descriptions-item>
-        </el-descriptions>
-      </div>
+      <el-row :gutter="20">
+        <el-col :span="16">
+          <!-- 工单信息 -->
+          <div class="page-card section-card">
+            <div class="section-title"><el-icon><Document /></el-icon> 工单信息</div>
+            <el-descriptions :column="2" border>
+              <el-descriptions-item label="工单编号">
+                <span class="mono-text">{{ detail.orderNo }}</span>
+              </el-descriptions-item>
+              <el-descriptions-item label="优先级"><PriorityTag v-if="detail.priority" :priority="detail.priority" /></el-descriptions-item>
+              <el-descriptions-item label="标题">
+                <span class="order-title">{{ detail.title }}</span>
+              </el-descriptions-item>
+              <el-descriptions-item label="提交人">{{ detail.submitterName }}</el-descriptions-item>
+              <el-descriptions-item label="工单类型">
+                <el-tag size="small" effect="plain">{{ ORDER_TYPE[detail.type]?.label || detail.type || '-' }}</el-tag>
+              </el-descriptions-item>
+              <el-descriptions-item label="提交时间">{{ formatDate(detail.createdAt) }}</el-descriptions-item>
+              <el-descriptions-item label="详情" :span="2">
+                <div class="order-detail-text">{{ detail.detail }}</div>
+              </el-descriptions-item>
+            </el-descriptions>
+          </div>
 
-      <!-- 审批流程 -->
-      <div class="page-card" style="margin-bottom: 16px;">
-        <h4>审批流程</h4>
-        <ApprovalTimeline :nodes="approvalNodes" />
-      </div>
-
-      <!-- 审批操作 -->
-      <div class="page-card">
-        <h4>审批操作</h4>
-        <el-form label-width="80px" style="max-width: 600px;">
-          <el-form-item label="审批意见">
-            <el-input v-model="comment" type="textarea" :rows="3" placeholder="请输入审批意见（选填）" />
-          </el-form-item>
-          <el-form-item>
-            <div class="action-btns">
-              <el-button type="success" :loading="submitting" @click="handleApprove">
-                <el-icon><Check /></el-icon>通过
-              </el-button>
-              <el-button type="danger" :loading="submitting" @click="handleReject">
-                <el-icon><Close /></el-icon>驳回
-              </el-button>
-              <el-button :loading="submitting" @click="openTransferDialog">
-                <el-icon><Switch /></el-icon>转交
-              </el-button>
-              <el-button type="warning" :loading="submitting" @click="openAddNodeDialog">
-                <el-icon><Plus /></el-icon>加签
-              </el-button>
-              <el-button v-if="pendingNodes.length > 0" type="info" :loading="submitting" @click="openRemoveNodeDialog">
-                <el-icon><Minus /></el-icon>减签
-              </el-button>
+          <!-- AI分析 -->
+          <div v-if="detail.aiCategory || detail.aiConfidence" class="page-card section-card ai-section">
+            <div class="section-title ai-title">
+              <div class="ai-title-icon"><el-icon><MagicStick /></el-icon></div>
+              AI 智能分析结果
+              <el-tag v-if="detail.aiAbnormal" type="danger" size="small" style="margin-left: 8px;">识别异常</el-tag>
+              <el-tag v-else type="success" size="small" style="margin-left: 8px;">分析完成</el-tag>
             </div>
-          </el-form-item>
-        </el-form>
-      </div>
+            <div class="ai-grid">
+              <div class="ai-item">
+                <span class="ai-label">智能分类</span>
+                <span class="ai-value ai-highlight">{{ AI_CATEGORY[detail.aiCategory] || detail.aiCategory || '待分析' }}</span>
+              </div>
+              <div class="ai-item">
+                <span class="ai-label">分类置信度</span>
+                <div class="confidence-bar">
+                  <el-progress :percentage="Math.round((detail.aiConfidence || 0) * 100)"
+                    :stroke-width="10" :color="confidenceColor" :format="(p) => p + '%'" />
+                </div>
+              </div>
+              <div class="ai-item">
+                <span class="ai-label">优先级判定</span>
+                <span class="ai-value">{{ detail.aiPriorityReason || '-' }}</span>
+              </div>
+              <div class="ai-item" v-if="detail.aiSuggestion">
+                <span class="ai-label">预审建议</span>
+                <span class="ai-value">{{ detail.aiSuggestion }}</span>
+              </div>
+              <div class="ai-item" v-if="detail.aiSensitiveWords">
+                <span class="ai-label">敏感词检测</span>
+                <el-tag type="danger" size="small">{{ detail.aiSensitiveWords }}</el-tag>
+              </div>
+            </div>
+          </div>
+
+          <!-- 审批操作 -->
+          <div class="page-card section-card action-section">
+            <div class="section-title"><el-icon><Edit /></el-icon> 审批操作</div>
+            <el-form label-width="80px">
+              <el-form-item label="审批意见">
+                <el-input v-model="comment" type="textarea" :rows="3" placeholder="请输入审批意见（通过时选填，驳回时必填）" maxlength="500" show-word-limit />
+              </el-form-item>
+              <el-form-item>
+                <div class="action-btns">
+                  <el-button type="success" size="large" :loading="submitting" @click="handleApprove" class="action-btn action-btn--main">
+                    <el-icon><Check /></el-icon>通过
+                  </el-button>
+                  <el-button type="danger" plain size="large" :loading="submitting" @click="handleReject" class="action-btn">
+                    <el-icon><Close /></el-icon>驳回
+                  </el-button>
+                  <el-button plain size="large" :loading="submitting" @click="openTransferDialog" class="action-btn">
+                    <el-icon><Switch /></el-icon>转交
+                  </el-button>
+                  <el-dropdown trigger="click" @command="handleMoreCommand">
+                    <el-button size="large" class="action-btn action-btn--more">
+                      更多操作<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+                    </el-button>
+                    <template #dropdown>
+                      <el-dropdown-menu>
+                        <el-dropdown-item command="addNode">
+                          <el-icon><Plus /></el-icon>加签（新增审批节点）
+                        </el-dropdown-item>
+                        <el-dropdown-item command="removeNode" :disabled="pendingNodes.length === 0">
+                          <el-icon><Minus /></el-icon>减签（跳过后续节点）
+                        </el-dropdown-item>
+                      </el-dropdown-menu>
+                    </template>
+                  </el-dropdown>
+                </div>
+                <div class="action-tips">
+                  <span><el-icon><InfoFilled /></el-icon> 通过/驳回为最终操作，转交/加签/减签不结束审批</span>
+                </div>
+              </el-form-item>
+            </el-form>
+          </div>
+        </el-col>
+
+        <el-col :span="8">
+          <!-- 审批流程 -->
+          <div class="page-card section-card">
+            <div class="section-title"><el-icon><Stamp /></el-icon> 审批流程</div>
+            <ApprovalTimeline :nodes="approvalNodes" />
+          </div>
+        </el-col>
+      </el-row>
     </div>
 
     <!-- 转交弹窗 -->
@@ -131,6 +204,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { getApprovalDetail, approveOrder, rejectOrder, transferOrder, addApprovalNode, removeApprovalNode } from '@/api/approve'
 import { getUsersByRole } from '@/api/user'
+import { ORDER_STATUS, ORDER_TYPE, AI_CATEGORY } from '@/utils/constants'
+import { formatDate } from '@/utils/format'
 import PriorityTag from '@/components/PriorityTag.vue'
 import ApprovalTimeline from '@/components/ApprovalTimeline.vue'
 
@@ -161,6 +236,13 @@ const pendingNodes = computed(() => {
   return approvalNodes.value.filter(
     n => n.status === 'PENDING' && n.nodeOrder > currentOrder
   )
+})
+
+const confidenceColor = computed(() => {
+  const v = (detail.value.aiConfidence || 0) * 100
+  if (v >= 90) return '#10b981'
+  if (v >= 70) return '#6366f1'
+  return '#f59e0b'
 })
 
 onMounted(async () => {
@@ -207,6 +289,11 @@ async function handleReject() {
     ElMessage.success('已驳回')
     router.push('/approve/pending')
   } catch {} finally { submitting.value = false }
+}
+
+function handleMoreCommand(command) {
+  if (command === 'addNode') openAddNodeDialog()
+  else if (command === 'removeNode') openRemoveNodeDialog()
 }
 
 function openTransferDialog() {
@@ -294,7 +381,147 @@ async function handleRemoveNode() {
 }
 </script>
 
-<style scoped>
-h4 { margin-bottom: 16px; font-size: 15px; }
-.action-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+<style scoped lang="scss">
+.approve-page-header {
+  margin-bottom: 20px;
+}
+
+.header-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  .header-title {
+    font-size: 16px;
+    font-weight: 600;
+  }
+}
+
+.section-card {
+  margin-bottom: 20px;
+}
+
+.section-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: $text-primary;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .el-icon { color: $primary-color; }
+}
+
+.mono-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: $text-secondary;
+}
+
+.order-title {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.order-detail-text {
+  line-height: 1.7;
+  white-space: pre-wrap;
+  color: $text-secondary;
+}
+
+// AI 分析区域
+.ai-section {
+  background: linear-gradient(135deg, #faf5ff 0%, #f0f0ff 100%);
+  border: 1px solid rgba(99, 102, 241, 0.12);
+}
+
+.ai-title {
+  .ai-title-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .el-icon { color: #fff; font-size: 14px; }
+  }
+}
+
+.ai-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+
+  .ai-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    .ai-label {
+      font-size: 12px;
+      color: $text-muted;
+      font-weight: 500;
+    }
+
+    .ai-value {
+      font-size: 13px;
+      color: $text-primary;
+      line-height: 1.5;
+    }
+
+    .ai-highlight {
+      font-weight: 600;
+      color: #6366f1;
+      font-size: 14px;
+    }
+
+    .confidence-bar {
+      width: 100%;
+      max-width: 200px;
+    }
+  }
+}
+
+// 审批操作区域
+.action-section {
+  border: 1px solid rgba(79, 110, 247, 0.15);
+  background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
+}
+
+.action-btns {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+
+  .action-btn {
+    min-width: 96px;
+    font-weight: 500;
+  }
+
+  .action-btn--main {
+    min-width: 120px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+
+  .action-btn--more {
+    color: $text-secondary;
+  }
+}
+
+.action-tips {
+  margin-top: 12px;
+  font-size: 12px;
+  color: $text-muted;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  .el-icon {
+    font-size: 13px;
+  }
+}
 </style>

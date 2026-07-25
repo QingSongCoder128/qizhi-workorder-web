@@ -104,6 +104,20 @@ const routes = [
         meta: { title: '个人设置', hidden: true }
       }
     ]
+  },
+  // 403 无权限
+  {
+    path: '/403',
+    name: 'Forbidden',
+    component: () => import('@/views/error/403.vue'),
+    meta: { public: true }
+  },
+  // 404 兜底
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('@/views/error/404.vue'),
+    meta: { public: true }
   }
 ]
 
@@ -130,6 +144,12 @@ router.beforeEach(async (to, from, next) => {
         next('/login')
         return
       }
+    }
+    // 角色权限校验
+    const requiredRoles = to.meta.roles
+    if (requiredRoles && !requiredRoles.includes(userStore.role)) {
+      next('/403')
+      return
     }
     next()
   }

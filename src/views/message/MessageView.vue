@@ -1,90 +1,319 @@
-<template>
+﻿<template>
   <div class="page-container">
+    <div class="page-header">
+      <div class="page-title">
+        <el-icon><Bell /></el-icon> 消息中心
+        <el-badge v-if="unreadTotal > 0" :value="unreadTotal" :max="99" class="unread-badge" />
+      </div>
+      <div class="header-actions">
+        <el-button type="primary" plain size="small" @click="handleReadAll" :disabled="unreadTotal === 0" :loading="readingAll">
+          <el-icon><Check /></el-icon> 全部已读
+        </el-button>
+      </div>
+    </div>
+
     <div class="page-card">
-      <div class="page-header">
-        <h3>消息中心</h3>
-        <el-button type="primary" link @click="handleReadAll">全部已读</el-button>
+      <!-- 消息类型 Tab -->
+      <el-tabs v-model="activeTab" @tab-change="handleTabChange">
+        <el-tab-pane label="全部消息" name="ALL" />
+        <el-tab-pane label="审批通知" name="APPROVE_NOTIFY" />
+        <el-tab-pane label="驳回通知" name="REJECT_NOTIFY" />
+        <el-tab-pane label="超时提醒" name="TIMEOUT_NOTIFY" />
+        <el-tab-pane label="催办通知" name="URGE_NOTIFY" />
+        <el-tab-pane label="系统通知" name="SYSTEM" />
+      </el-tabs>
+
+      <!-- 消息列表（按 今天 / 昨天 / 更早 分组） -->
+      <div class="message-list" v-loading="loading">
+        <template v-for="group in groupedMessages" :key="group.label">
+          <div class="group-divider">
+            <span class="group-label">{{ group.label }}</span>
+          </div>
+          <div v-for="msg in group.items" :key="msg.id"
+               class="message-item" :class="{ unread: !msg.isRead }"
+               @click="handleClick(msg)">
+            <div class="msg-icon" :style="{ background: getTypeColor(msg.msgType) }">
+              <el-icon :size="16" color="#fff"><component :is="getTypeIcon(msg.msgType)" /></el-icon>
+            </div>
+            <div class="msg-content">
+              <div class="msg-title">
+                <span class="msg-name">{{ msg.title }}</span>
+                <span v-if="!msg.isRead" class="unread-dot" title="未读"></span>
+              </div>
+              <p class="msg-text">{{ msg.content }}</p>
+              <span class="msg-time" :title="formatDate(msg.createdAt)">{{ timeAgo(msg.createdAt) }}</span>
+            </div>
+            <div class="msg-actions">
+              <el-button link type="danger" size="small" class="delete-btn" @click.stop="handleDelete(msg)">
+                <el-icon><Delete /></el-icon>
+              </el-button>
+            </div>
+          </div>
+        </template>
+
+        <div v-if="messages.length === 0 && !loading" class="empty-state">
+          <el-icon class="empty-icon"><Bell /></el-icon>
+          <p class="empty-text">暂无消息</p>
+        </div>
       </div>
-      <el-table :data="tableData" v-loading="loading" stripe>
-        <el-table-column width="10">
-          <template #default="{ row }">
-            <el-badge is-dot :hidden="row.isRead" />
-          </template>
-        </el-table-column>
-        <el-table-column prop="title" label="标题" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="msgType" label="类型" width="120">
-          <template #default="{ row }">{{ MSG_TYPE[row.msgType] || row.msgType }}</template>
-        </el-table-column>
-        <el-table-column prop="createdAt" label="时间" width="170">
-          <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
-        </el-table-column>
-        <el-table-column label="操作" width="120">
-          <template #default="{ row }">
-            <el-button v-if="!row.isRead" link type="primary" @click="handleRead(row)">标记已读</el-button>
-            <el-button link type="danger" @click="handleDelete(row)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      <div class="pagination-wrap">
-        <el-pagination v-model:current-page="query.page" v-model:page-size="query.pageSize" :total="total" :page-sizes="[10,20,50]" layout="total, sizes, prev, pager, next" @size-change="fetchList" @current-change="fetchList" />
-      </div>
+
+      <el-pagination
+        v-model:current-page="query.page"
+        v-model:page-size="query.pageSize"
+        :total="total"
+        :page-sizes="[10, 20, 50]"
+        layout="total, prev, pager, next"
+        @current-change="fetchList"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Bell, Check, Delete } from '@element-plus/icons-vue'
+import { getMessageList, getUnreadCount, markAsRead, markAllAsRead, deleteMessage } from '@/api/message'
 import { MSG_TYPE } from '@/utils/constants'
-import { getMessageList, markAsRead, markAllAsRead, deleteMessage } from '@/api/message'
-import { useMessageStore } from '@/store/message'
-import { formatDate } from '@/utils/format'
+import { formatDate, timeAgo } from '@/utils/format'
 
-const messageStore = useMessageStore()
+const router = useRouter()
 const loading = ref(false)
-const tableData = ref([])
+const readingAll = ref(false)
+const messages = ref([])
 const total = ref(0)
-const query = reactive({ page: 1, pageSize: 10 })
+const unreadTotal = ref(0)
+const activeTab = ref('ALL')
+const query = reactive({ page: 1, pageSize: 20, msgType: '' })
 
-onMounted(() => fetchList())
+function getTypeIcon(type) { return MSG_TYPE[type]?.icon || 'InfoFilled' }
+function getTypeColor(type) { return MSG_TYPE[type]?.color || '#64748b' }
+
+// 按 今天 / 昨天 / 更早 分组
+const groupedMessages = computed(() => {
+  const startOfToday = new Date()
+  startOfToday.setHours(0, 0, 0, 0)
+  const todayStart = startOfToday.getTime()
+  const yesterdayStart = todayStart - 86400000
+
+  const groups = { today: [], yesterday: [], earlier: [] }
+  messages.value.forEach(m => {
+    const t = new Date(m.createdAt).getTime()
+    if (t >= todayStart) groups.today.push(m)
+    else if (t >= yesterdayStart) groups.yesterday.push(m)
+    else groups.earlier.push(m)
+  })
+
+  return [
+    { label: '今天', items: groups.today },
+    { label: '昨天', items: groups.yesterday },
+    { label: '更早', items: groups.earlier }
+  ].filter(g => g.items.length > 0)
+})
+
+onMounted(() => {
+  fetchList()
+  fetchUnreadCount()
+})
+
+async function fetchUnreadCount() {
+  try {
+    const res = await getUnreadCount()
+    unreadTotal.value = res.data || 0
+  } catch {}
+}
+
+function handleTabChange() {
+  query.page = 1
+  fetchList()
+}
 
 async function fetchList() {
   loading.value = true
+  query.msgType = activeTab.value === 'ALL' ? '' : activeTab.value
   try {
     const res = await getMessageList(query)
-    tableData.value = res.data?.records || []
+    messages.value = res.data?.records || []
     total.value = res.data?.total || 0
-  } catch {} finally { loading.value = false }
+  } catch {} finally {
+    loading.value = false
+  }
 }
 
-async function handleRead(row) {
-  try {
-    await markAsRead(row.id)
-    row.isRead = true
-    messageStore.decrement()
-  } catch {}
+async function handleClick(msg) {
+  if (!msg.isRead) {
+    try {
+      await markAsRead(msg.id)
+      msg.isRead = 1
+      unreadTotal.value = Math.max(0, unreadTotal.value - 1)
+    } catch {}
+  }
+  if (msg.bizType === 'WORK_ORDER' && msg.bizId) {
+    router.push(`/workorder/detail/${msg.bizId}`)
+  } else if (msg.bizType === 'APPROVE' && msg.bizId) {
+    router.push(`/approve/detail/${msg.bizId}`)
+  }
 }
 
 async function handleReadAll() {
+  readingAll.value = true
   try {
     await markAllAsRead()
-    tableData.value.forEach(r => r.isRead = true)
-    messageStore.clear()
+    messages.value.forEach(m => m.isRead = 1)
+    unreadTotal.value = 0
     ElMessage.success('已全部标记为已读')
-  } catch {}
+  } catch {
+    ElMessage.error('操作失败，请重试')
+  } finally {
+    readingAll.value = false
+  }
 }
 
-async function handleDelete(row) {
+async function handleDelete(msg) {
   try {
-    await deleteMessage(row.id)
+    await ElMessageBox.confirm('确定删除该消息吗？', '确认', { type: 'warning' })
+    await deleteMessage(msg.id)
+    ElMessage.success('已删除')
     fetchList()
-    messageStore.fetchUnreadCount()
+    fetchUnreadCount()
   } catch {}
 }
 </script>
 
-<style scoped>
-.page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.page-header h3 { font-size: 18px; }
-.pagination-wrap { margin-top: 16px; display: flex; justify-content: flex-end; }
+<style lang="scss" scoped>
+.page-title {
+  position: relative;
+
+  .unread-badge {
+    margin-left: 8px;
+  }
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.message-list {
+  min-height: 200px;
+}
+
+.group-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 18px 0 6px;
+
+  &:first-child {
+    margin-top: 4px;
+  }
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: #f1f5f9;
+  }
+
+  .group-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: $text-muted;
+    letter-spacing: 1px;
+  }
+}
+
+.message-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: #f8fafc;
+
+    .delete-btn {
+      opacity: 1;
+    }
+  }
+
+  &.unread {
+    background: #f0f7ff;
+
+    &:hover {
+      background: #e6f0ff;
+    }
+
+    .msg-name {
+      font-weight: 600;
+    }
+  }
+
+  .msg-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .msg-content {
+    flex: 1;
+    min-width: 0;
+
+    .msg-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+
+      .msg-name {
+        font-size: 14px;
+        color: #1e293b;
+      }
+
+      .unread-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #4f6ef7;
+        flex-shrink: 0;
+      }
+    }
+
+    .msg-text {
+      font-size: 13px;
+      color: #64748b;
+      line-height: 1.5;
+      margin: 0 0 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .msg-time {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+  }
+
+  .msg-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+
+    .delete-btn {
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+  }
+}
 </style>

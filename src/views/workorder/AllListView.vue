@@ -1,31 +1,52 @@
 <template>
   <div class="page-container">
+    <div class="page-header">
+      <div class="page-title"><el-icon><Files /></el-icon> 全部工单</div>
+      <el-button type="primary" plain :icon="Download" @click="handleExport" :loading="exporting">导出Excel</el-button>
+    </div>
+
     <div class="page-card">
-      <h3 class="page-title">全部工单</h3>
       <div class="search-bar">
-        <el-input v-model="query.keyword" placeholder="工单编号/标题" clearable style="width: 200px;" />
-        <el-select v-model="query.status" placeholder="状态" clearable style="width: 130px;">
+        <el-input v-model="query.keyword" placeholder="搜索编号/标题" clearable style="width: 200px"
+                  :prefix-icon="Search" @keyup.enter="fetchList" @clear="fetchList" />
+        <el-select v-model="query.status" placeholder="状态" clearable style="width: 130px" @change="resetAndFetch">
           <el-option v-for="(v, k) in ORDER_STATUS" :key="k" :label="v.label" :value="k" />
         </el-select>
-        <el-select v-model="query.type" placeholder="类型" clearable style="width: 130px;">
+        <el-select v-model="query.type" placeholder="类型" clearable style="width: 130px" @change="resetAndFetch">
           <el-option v-for="(v, k) in ORDER_TYPE" :key="k" :label="v.label" :value="k" />
         </el-select>
-        <el-button type="primary" @click="fetchList">查询</el-button>
+        <el-date-picker v-model="dateRange" type="daterange" range-separator="至"
+                        start-placeholder="开始日期" end-placeholder="结束日期" style="width: 240px"
+                        value-format="YYYY-MM-DD" @change="handleDateChange" />
+        <el-button type="primary" :icon="Search" @click="fetchList">查询</el-button>
       </div>
-      <el-table :data="tableData" v-loading="loading" stripe>
-        <el-table-column prop="orderNo" label="工单编号" width="180" />
-        <el-table-column prop="title" label="标题" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="submitterName" label="提交人" width="100" />
-        <el-table-column prop="type" label="类型" width="110">
-          <template #default="{ row }">{{ ORDER_TYPE[row.type]?.label }}</template>
+
+      <el-table :data="tableData" v-loading="loading" empty-text=" " :row-class-name="rowClassName">
+        <el-table-column prop="title" label="标题" min-width="230" show-overflow-tooltip>
+          <template #default="{ row }">
+            <div class="order-cell">
+              <div class="order-cell__title">
+                <el-icon v-if="row.urgent" class="urgent-flag"><WarningFilled /></el-icon>
+                <span class="title-text" @click="$router.push(`/workorder/detail/${row.id}`)">{{ row.title }}</span>
+                <el-tag v-if="isOrderTimeout(row)" type="danger" size="small" effect="dark" class="timeout-chip">超时</el-tag>
+              </div>
+              <span class="order-cell__no">{{ row.orderNo }}</span>
+            </div>
+          </template>
         </el-table-column>
-        <el-table-column prop="status" label="状态" width="100">
+        <el-table-column prop="submitterName" label="提交人" width="90" />
+        <el-table-column prop="type" label="类型" width="100">
+          <template #default="{ row }">
+            <el-tag size="small" effect="plain">{{ ORDER_TYPE[row.type]?.label || row.type }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="status" label="状态" width="95">
           <template #default="{ row }"><StatusTag :status="row.status" /></template>
         </el-table-column>
-        <el-table-column prop="priority" label="优先级" width="80">
+        <el-table-column prop="priority" label="优先级" width="85">
           <template #default="{ row }"><PriorityTag v-if="row.priority" :priority="row.priority" /></template>
         </el-table-column>
-        <el-table-column prop="createdAt" label="提交时间" width="170">
+        <el-table-column prop="createdAt" label="提交时间" width="150">
           <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
         </el-table-column>
         <el-table-column label="操作" width="80" fixed="right">
@@ -33,28 +54,51 @@
             <el-button link type="primary" @click="$router.push(`/workorder/detail/${row.id}`)">详情</el-button>
           </template>
         </el-table-column>
+        <template #empty>
+          <div class="empty-state">
+            <el-icon class="empty-icon"><Files /></el-icon>
+            <p class="empty-text">暂无工单数据</p>
+          </div>
+        </template>
       </el-table>
-      <div class="pagination-wrap">
-        <el-pagination v-model:current-page="query.page" v-model:page-size="query.pageSize" :total="total" :page-sizes="[10,20,50]" layout="total, sizes, prev, pager, next" @size-change="fetchList" @current-change="fetchList" />
-      </div>
+
+      <el-pagination
+        v-model:current-page="query.page"
+        v-model:page-size="query.pageSize"
+        :total="total"
+        :page-sizes="[10, 20, 50]"
+        layout="total, sizes, prev, pager, next"
+        @size-change="fetchList"
+        @current-change="fetchList"
+      />
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { Search, Download, WarningFilled } from '@element-plus/icons-vue'
 import { ORDER_STATUS, ORDER_TYPE } from '@/utils/constants'
 import { getAllWorkOrders } from '@/api/workOrder'
+import { exportExcel } from '@/api/statistics'
 import { formatDate } from '@/utils/format'
+import { isOrderTimeout } from '@/utils/time'
 import StatusTag from '@/components/StatusTag.vue'
 import PriorityTag from '@/components/PriorityTag.vue'
 
 const loading = ref(false)
+const exporting = ref(false)
 const tableData = ref([])
 const total = ref(0)
-const query = reactive({ keyword: '', status: '', type: '', page: 1, pageSize: 10 })
+const dateRange = ref(null)
+const query = reactive({ keyword: '', status: '', type: '', startDate: '', endDate: '', page: 1, pageSize: 10 })
 
 onMounted(() => fetchList())
+
+function rowClassName({ row }) {
+  return isOrderTimeout(row) ? 'timeout-row' : ''
+}
 
 async function fetchList() {
   loading.value = true
@@ -62,11 +106,106 @@ async function fetchList() {
     const res = await getAllWorkOrders(query)
     tableData.value = res.data?.records || []
     total.value = res.data?.total || 0
-  } catch {} finally { loading.value = false }
+  } catch {} finally {
+    loading.value = false
+  }
+}
+
+function resetAndFetch() {
+  query.page = 1
+  fetchList()
+}
+
+function handleDateChange(val) {
+  if (val) {
+    query.startDate = val[0]
+    query.endDate = val[1]
+  } else {
+    query.startDate = ''
+    query.endDate = ''
+  }
+  query.page = 1
+  fetchList()
+}
+
+async function handleExport() {
+  exporting.value = true
+  try {
+    const res = await exportExcel(query)
+    const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `全部工单_${new Date().toISOString().slice(0, 10)}.xlsx`
+    a.click()
+    URL.revokeObjectURL(url)
+    ElMessage.success(`导出成功：全部工单_${new Date().toISOString().slice(0, 10)}.xlsx`)
+  } catch {
+    ElMessage.error('导出失败')
+  } finally {
+    exporting.value = false
+  }
 }
 </script>
 
-<style scoped>
-.page-title { margin-bottom: 20px; font-size: 18px; }
-.pagination-wrap { margin-top: 16px; display: flex; justify-content: flex-end; }
+<style lang="scss" scoped>
+.search-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.order-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  line-height: 1.35;
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+
+    .urgent-flag {
+      color: #ef4444;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .title-text {
+      font-weight: 600;
+      font-size: 14px;
+      color: $text-primary;
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      &:hover {
+        color: $primary-color;
+      }
+    }
+
+    .timeout-chip {
+      flex-shrink: 0;
+    }
+  }
+
+  &__no {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: $text-muted;
+  }
+}
+</style>
+
+<style lang="scss">
+/* 超时行高亮（需非 scoped 才能穿透 el-table 行） */
+.el-table .timeout-row > td.el-table__cell {
+  background-color: #fef2f2 !important;
+}
+.el-table .timeout-row:hover > td.el-table__cell {
+  background-color: #fee2e2 !important;
+}
 </style>

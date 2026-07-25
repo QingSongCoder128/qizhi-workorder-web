@@ -5,11 +5,11 @@
       :key="item.id"
       :timestamp="formatDate(item.createdAt)"
       placement="top"
-      :type="getType(item.status)"
+      :type="getType(item.toStatus || item.status)"
     >
       <el-card shadow="never" class="timeline-card">
         <div class="timeline-title">
-          <StatusTag :status="item.status" />
+          <StatusTag :status="item.toStatus || item.status" />
           <span class="operator">{{ item.operatorName }}</span>
         </div>
         <div class="timeline-desc">{{ item.remark || '状态变更' }}</div>

@@ -1,18 +1,30 @@
-// 深蓝商务风主题变量
-$primary-color: #1890ff;
-$sidebar-bg: #0d1b2a;
-$sidebar-text: #8899aa;
-$sidebar-active-bg: #162d4a;
-$sidebar-active-text: #1890ff;
+// ========== 深蓝商务风主题变量 ==========
+
+// 主色系
+$primary-color: #4f6ef7;
+$primary-light: #eef2ff;
+$primary-dark: #3b5de7;
+$secondary-color: #7c3aed;
+
+// 布局
+$sidebar-bg: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+$sidebar-text: #94a3b8;
+$sidebar-active-bg: rgba(79, 110, 247, 0.15);
+$sidebar-active-text: #818cf8;
 $header-bg: #ffffff;
-$content-bg: #f0f2f5;
+$content-bg: #f1f5f9;
 $card-bg: #ffffff;
 
 // 状态色
-$success: #52c41a;
-$warning: #faad14;
-$danger: #ff4d4f;
-$info: #1890ff;
+$success: #10b981;
+$warning: #f59e0b;
+$danger: #ef4444;
+$info: #6366f1;
+
+// 文字色
+$text-primary: #1e293b;
+$text-secondary: #64748b;
+$text-muted: #94a3b8;
 
 // 尺寸
 $sidebar-width: 220px;
@@ -20,5 +32,16 @@ $sidebar-collapsed-width: 64px;
 $header-height: 60px;
 
 // 圆角
-$border-radius: 8px;
-$border-radius-sm: 4px;
+$border-radius: 12px;
+$border-radius-sm: 8px;
+$border-radius-xs: 6px;
+
+// 阴影
+$shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+$shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.12);
+$shadow-card: 0 2px 8px rgba(0, 0, 0, 0.06);
+
+// 过渡
+$transition-fast: 0.2s ease;
+$transition-normal: 0.3s ease;

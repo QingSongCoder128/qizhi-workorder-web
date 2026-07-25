@@ -6,9 +6,10 @@
 
 html, body, #app {
   height: 100%;
-  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+  font-family: 'Inter', 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
     'Microsoft YaHei', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
+  color: $text-primary;
 }
 
 // 滚动条美化
@@ -17,8 +18,11 @@ html, body, #app {
   height: 6px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d9d9d9;
+  background: #cbd5e1;
   border-radius: 3px;
+  &:hover {
+    background: #94a3b8;
+  }
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -26,15 +30,61 @@ html, body, #app {
 
 // 页面容器
 .page-container {
-  padding: 20px;
+  padding: 24px;
+  animation: fadeInUp 0.3s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// 页面标题
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+
+  .page-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: $text-primary;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .el-icon {
+      font-size: 22px;
+      color: $primary-color;
+    }
+  }
+
+  .page-desc {
+    font-size: 13px;
+    color: $text-muted;
+    margin-top: 4px;
+  }
 }
 
 // 卡片
 .page-card {
   background: $card-bg;
   border-radius: $border-radius;
-  padding: 20px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  padding: 24px;
+  box-shadow: $shadow-card;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  transition: box-shadow $transition-fast;
+
+  &:hover {
+    box-shadow: $shadow-md;
+  }
 }
 
 // 搜索栏
@@ -42,7 +92,7 @@ html, body, #app {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   flex-wrap: wrap;
 }
 
@@ -52,4 +102,89 @@ html, body, #app {
   gap: 8px;
 }
 
+// Element Plus 全局覆写
+.el-table {
+  --el-table-border-color: #f1f5f9;
+  --el-table-header-bg-color: #f8fafc;
+  --el-table-row-hover-bg-color: #f8fafc;
+  border-radius: $border-radius-sm;
+  overflow: hidden;
 
+  th.el-table__cell {
+    font-weight: 600;
+    color: $text-secondary;
+    font-size: 13px;
+  }
+
+  td.el-table__cell {
+    font-size: 13px;
+    color: $text-primary;
+  }
+}
+
+.el-card {
+  border-radius: $border-radius;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: $shadow-card;
+}
+
+.el-button--primary {
+  --el-button-bg-color: #{$primary-color};
+  --el-button-border-color: #{$primary-color};
+  --el-button-hover-bg-color: #{$primary-dark};
+  --el-button-hover-border-color: #{$primary-dark};
+}
+
+.el-dialog {
+  border-radius: $border-radius;
+
+  .el-dialog__header {
+    border-bottom: 1px solid #f1f5f9;
+    padding: 16px 20px;
+    margin-right: 0;
+  }
+
+  .el-dialog__body {
+    padding: 20px;
+  }
+
+  .el-dialog__footer {
+    border-top: 1px solid #f1f5f9;
+    padding: 12px 20px;
+  }
+}
+
+.el-pagination {
+  margin-top: 16px;
+  justify-content: flex-end;
+}
+
+// 空状态
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: $text-muted;
+
+  .empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+
+  .empty-text {
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+}
+
+// 标签徽章
+.status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 6px;
+}

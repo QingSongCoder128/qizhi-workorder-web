@@ -79,3 +79,8 @@ export function updateProfile(data) {
 export function getUsersByRole(roleCode) {
   return request.get('/api/v1/user/by-role', { params: { roleCode } })
 }
+
+// 修改密码
+export function changePassword(data) {
+  return request.put('/api/v1/user/password', data)
+}
