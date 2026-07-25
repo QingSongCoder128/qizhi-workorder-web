@@ -1,40 +1,40 @@
 ﻿<template>
-  <div class="page-container">
-    <div class="page-header">
-      <div class="page-title"><el-icon><User /></el-icon> 个人设置</div>
-    </div>
-
-    <el-row :gutter="20">
-      <el-col :span="8">
-        <!-- 用户信息卡片 -->
-        <div class="page-card user-card">
-          <div class="avatar-section">
-            <div class="avatar">{{ (userStore.realName || userStore.username || '?')[0] }}</div>
-            <h3>{{ userStore.realName || userStore.username }}</h3>
-            <el-tag :type="roleTagType" effect="dark" size="small">{{ roleLabel }}</el-tag>
+  <div class="profile-page">
+    <!-- 顶部个人信息横幅 -->
+    <div class="profile-banner">
+      <div class="banner-bg"></div>
+      <div class="banner-content">
+        <div class="avatar-wrapper">
+          <el-avatar v-if="userStore.avatarUrl" :src="userStore.avatarUrl" :size="72" class="avatar-img" />
+          <div v-else class="avatar">{{ avatarChar }}</div>
+          <div class="avatar-upload-btn" @click="triggerUpload">
+            <el-icon><Camera /></el-icon>
           </div>
-          <div class="user-meta">
-            <div class="meta-item">
-              <el-icon><OfficeBuilding /></el-icon>
-              <span>部门：{{ deptName }}</span>
-            </div>
-            <div class="meta-item">
-              <el-icon><Phone /></el-icon>
-              <span>{{ form.phone || '未设置' }}</span>
-            </div>
-            <div class="meta-item">
-              <el-icon><Message /></el-icon>
-              <span>{{ form.email || '未设置' }}</span>
-            </div>
+          <input ref="fileInputRef" type="file" accept=".jpg,.jpeg,.png,.gif,.webp" class="upload-input" @change="handleAvatarChange" />
+        </div>
+        <div class="banner-info">
+          <div class="banner-name">
+            {{ userStore.realName || userStore.username }}
+            <el-tag :type="roleTagType" effect="dark" size="small" round>{{ roleLabel }}</el-tag>
+          </div>
+          <div class="banner-meta">
+            <span><el-icon><OfficeBuilding /></el-icon>{{ deptName }}</span>
+            <span><el-icon><Phone /></el-icon>{{ form.phone || '未设置' }}</span>
+            <span><el-icon><Message /></el-icon>{{ form.email || '未设置' }}</span>
           </div>
         </div>
-      </el-col>
+      </div>
+    </div>
 
-      <el-col :span="16">
-        <!-- 基本信息 -->
-        <div class="page-card">
-          <div class="section-title"><el-icon><Edit /></el-icon> 基本信息</div>
-          <el-form ref="infoFormRef" :model="form" :rules="infoRules" label-width="90px">
+    <el-row :gutter="20" class="profile-body">
+      <!-- 基本信息 -->
+      <el-col :span="12">
+        <div class="profile-card">
+          <div class="card-header">
+            <el-icon><Edit /></el-icon>
+            <span>基本信息</span>
+          </div>
+          <el-form ref="infoFormRef" :model="form" :rules="infoRules" label-position="top">
             <el-form-item label="账号">
               <el-input :model-value="userStore.username" disabled />
             </el-form-item>
@@ -42,10 +42,10 @@
               <el-input :model-value="userStore.realName" disabled />
             </el-form-item>
             <el-form-item label="手机号" prop="phone">
-              <el-input v-model="form.phone" placeholder="请输入手机号" />
+              <el-input v-model="form.phone" placeholder="请输入手机号" clearable />
             </el-form-item>
             <el-form-item label="邮箱" prop="email">
-              <el-input v-model="form.email" placeholder="请输入邮箱" />
+              <el-input v-model="form.email" placeholder="请输入邮箱" clearable />
             </el-form-item>
             <el-form-item label="部门">
               <el-input :model-value="deptName" disabled />
@@ -55,11 +55,16 @@
             </el-form-item>
           </el-form>
         </div>
+      </el-col>
 
-        <!-- 修改密码 -->
-        <div class="page-card" style="margin-top: 20px;">
-          <div class="section-title"><el-icon><Lock /></el-icon> 修改密码</div>
-          <el-form ref="pwdFormRef" :model="pwdForm" :rules="pwdRules" label-width="90px">
+      <!-- 修改密码 -->
+      <el-col :span="12">
+        <div class="profile-card">
+          <div class="card-header">
+            <el-icon><Lock /></el-icon>
+            <span>修改密码</span>
+          </div>
+          <el-form ref="pwdFormRef" :model="pwdForm" :rules="pwdRules" label-position="top">
             <el-form-item label="旧密码" prop="oldPassword">
               <el-input v-model="pwdForm.oldPassword" type="password" show-password placeholder="请输入当前密码" />
             </el-form-item>
@@ -73,6 +78,10 @@
               <el-button type="warning" :loading="savingPwd" @click="handleChangePwd">修改密码</el-button>
             </el-form-item>
           </el-form>
+          <div class="pwd-tips">
+            <el-icon><InfoFilled /></el-icon>
+            修改成功后需重新登录，密码请使用6-20位字母数字组合
+          </div>
         </div>
       </el-col>
     </el-row>
@@ -82,9 +91,9 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { User, OfficeBuilding, Phone, Message, Edit, Lock } from '@element-plus/icons-vue'
+import { OfficeBuilding, Phone, Message, Edit, Lock, InfoFilled, Camera } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/user'
-import { updateProfile, changePassword } from '@/api/user'
+import { updateProfile, changePassword, uploadAvatar } from '@/api/user'
 import { DEPT_MAP } from '@/utils/constants'
 
 const userStore = useUserStore()
@@ -95,22 +104,33 @@ const savingPwd = ref(false)
 
 const form = reactive({ phone: '', email: '' })
 const pwdForm = reactive({ oldPassword: '', newPassword: '', confirmPassword: '' })
+const fileInputRef = ref()
+const uploading = ref(false)
 
-const ROLE_MAP = { ADMIN: '管理员', APPROVER: '审批人', SUBMITTER: '提交人' }
+const ROLE_MAP = { ADMIN: '管理员', APPROVER: '审批人', EMPLOYEE: '员工' }
 const roleLabel = computed(() => ROLE_MAP[userStore.role] || userStore.role)
 const roleTagType = computed(() => {
-  const map = { ADMIN: 'danger', APPROVER: 'warning', SUBMITTER: '' }
+  const map = { ADMIN: 'danger', APPROVER: 'warning', EMPLOYEE: '' }
   return map[userStore.role] || 'info'
 })
 const deptName = computed(() => DEPT_MAP[userStore.deptCode] || userStore.deptCode || '未分配')
+const avatarChar = computed(() => (userStore.realName || userStore.username || '?')[0])
 
 const infoRules = {
   phone: [{ pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }],
   email: [{ type: 'email', message: '邮箱格式不正确', trigger: 'blur' }]
 }
 
+const validateNewPwd = (rule, value, callback) => {
+  if (value && (value.length < 6 || value.length > 20)) {
+    callback(new Error('密码长度6-20位'))
+  } else {
+    callback()
+  }
+}
+
 const validateConfirm = (rule, value, callback) => {
-  if (value !== pwdForm.newPassword) {
+  if (value && value !== pwdForm.newPassword) {
     callback(new Error('两次输入的密码不一致'))
   } else {
     callback()
@@ -118,21 +138,39 @@ const validateConfirm = (rule, value, callback) => {
 }
 
 const pwdRules = {
-  oldPassword: [{ required: true, message: '请输入旧密码', trigger: 'blur' }],
-  newPassword: [
-    { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 6, max: 20, message: '密码长度6-20位', trigger: 'blur' }
-  ],
-  confirmPassword: [
-    { required: true, message: '请确认新密码', trigger: 'blur' },
-    { validator: validateConfirm, trigger: 'blur' }
-  ]
+  newPassword: [{ validator: validateNewPwd, trigger: 'blur' }],
+  confirmPassword: [{ validator: validateConfirm, trigger: 'blur' }]
 }
 
 onMounted(() => {
   form.phone = userStore.phone || ''
   form.email = userStore.email || ''
 })
+
+function triggerUpload() {
+  fileInputRef.value?.click()
+}
+
+async function handleAvatarChange(e) {
+  const file = e.target.files?.[0]
+  if (!file) return
+  if (file.size > 2 * 1024 * 1024) {
+    ElMessage.warning('头像文件不能超过 2MB')
+    e.target.value = ''
+    return
+  }
+  uploading.value = true
+  try {
+    const formData = new FormData()
+    formData.append('file', file)
+    const res = await uploadAvatar(formData)
+    userStore.avatarUrl = res.data?.url || ''
+    ElMessage.success('头像更新成功')
+  } catch {} finally {
+    uploading.value = false
+    e.target.value = ''
+  }
+}
 
 async function handleSaveInfo() {
   const valid = await infoFormRef.value.validate().catch(() => false)
@@ -149,6 +187,10 @@ async function handleSaveInfo() {
 }
 
 async function handleChangePwd() {
+  if (!pwdForm.oldPassword || !pwdForm.newPassword || !pwdForm.confirmPassword) {
+    ElMessage.warning('请填写完整的密码信息')
+    return
+  }
   const valid = await pwdFormRef.value.validate().catch(() => false)
   if (!valid) return
   savingPwd.value = true
@@ -158,6 +200,7 @@ async function handleChangePwd() {
     pwdForm.oldPassword = ''
     pwdForm.newPassword = ''
     pwdForm.confirmPassword = ''
+    pwdFormRef.value.clearValidate()
   } catch {} finally {
     savingPwd.value = false
   }
@@ -165,62 +208,153 @@ async function handleChangePwd() {
 </script>
 
 <style lang="scss" scoped>
-.user-card {
-  text-align: center;
+.profile-page {
+  padding: 0;
+}
 
-  .avatar-section {
-    padding: 20px 0;
-    border-bottom: 1px solid #f1f5f9;
-    margin-bottom: 20px;
+.profile-banner {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 
-    .avatar {
-      width: 72px;
-      height: 72px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #4f6ef7, #7c3aed);
-      color: #fff;
-      font-size: 28px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 12px;
-    }
-
-    h3 {
-      font-size: 18px;
-      color: #1e293b;
-      margin-bottom: 8px;
-    }
+  .banner-bg {
+    height: 88px;
+    background: linear-gradient(135deg, #4f6ef7 0%, #7c3aed 100%);
   }
 
-  .user-meta {
+  .banner-content {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
-    text-align: left;
+    align-items: flex-end;
+    gap: 20px;
+    padding: 0 28px 20px;
+    margin-top: -36px;
+    position: relative;
 
-    .meta-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 13px;
-      color: #64748b;
+    .avatar-wrapper {
+      position: relative;
+      flex-shrink: 0;
 
-      .el-icon { color: #4f6ef7; }
+      .avatar-img {
+        border: 3px solid #fff;
+        box-shadow: 0 2px 8px rgba(79, 110, 247, 0.3);
+      }
+
+      .avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #4f6ef7, #7c3aed);
+        color: #fff;
+        font-size: 28px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid #fff;
+        box-shadow: 0 2px 8px rgba(79, 110, 247, 0.3);
+      }
+
+      .avatar-upload-btn {
+        position: absolute;
+        right: 0;
+        bottom: 2px;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #4f6ef7;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 13px;
+        cursor: pointer;
+        border: 2px solid #fff;
+        transition: background 0.2s;
+
+        &:hover {
+          background: #3b5de7;
+        }
+      }
+
+      .upload-input {
+        display: none;
+      }
+    }
+
+    .banner-info {
+      padding-bottom: 4px;
+
+      .banner-name {
+        font-size: 20px;
+        font-weight: 700;
+        color: #1e293b;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 8px;
+      }
+
+      .banner-meta {
+        display: flex;
+        gap: 24px;
+        font-size: 13px;
+        color: #64748b;
+
+        span {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+
+          .el-icon {
+            color: #4f6ef7;
+            font-size: 14px;
+          }
+        }
+      }
     }
   }
 }
 
-.section-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: #1e293b;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.profile-body {
+  .profile-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    min-height: 420px;
 
-  .el-icon { color: #4f6ef7; }
+    .card-header {
+      font-size: 15px;
+      font-weight: 600;
+      color: #1e293b;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #f1f5f9;
+
+      .el-icon {
+        color: #4f6ef7;
+        font-size: 17px;
+      }
+    }
+
+    .pwd-tips {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #94a3b8;
+      margin-top: 4px;
+
+      .el-icon {
+        font-size: 14px;
+      }
+    }
+  }
 }
 </style>

@@ -12,6 +12,7 @@ export const useUserStore = defineStore('user', () => {
   const role = ref('')
   const phone = ref('')
   const email = ref('')
+  const avatarUrl = ref('')
   const permissions = ref([])
   const sessionId = ref('')
 
@@ -24,6 +25,9 @@ export const useUserStore = defineStore('user', () => {
     realName.value = data.realName
     deptCode.value = data.deptCode
     role.value = data.role
+    phone.value = data.phone || ''
+    email.value = data.email || ''
+    avatarUrl.value = data.avatarUrl || ''
     permissions.value = data.permissions || []
     setSessionId(data.sessionId)
   }
@@ -38,6 +42,7 @@ export const useUserStore = defineStore('user', () => {
     role.value = data.roleCode
     phone.value = data.phone || ''
     email.value = data.email || ''
+    avatarUrl.value = data.avatarUrl || ''
     permissions.value = data.permissions || []
   }
 
@@ -49,13 +54,14 @@ export const useUserStore = defineStore('user', () => {
     role.value = ''
     phone.value = ''
     email.value = ''
+    avatarUrl.value = ''
     permissions.value = []
     sessionId.value = ''
     removeSessionId()
   }
 
   return {
-    userId, username, realName, deptCode, role, phone, email, permissions, sessionId,
+    userId, username, realName, deptCode, role, phone, email, avatarUrl, permissions, sessionId,
     login, fetchUserInfo, logout
   }
 })

@@ -22,7 +22,7 @@
       <!-- 用户下拉 -->
       <el-dropdown trigger="click" @command="handleCommand">
         <div class="user-info">
-          <el-avatar :size="32" :style="{ backgroundColor: '#1890ff' }">
+          <el-avatar :size="32" :src="userStore.avatarUrl || undefined" :style="{ backgroundColor: '#1890ff' }">
             {{ userStore.realName?.charAt(0) || 'U' }}
           </el-avatar>
           <span class="username">{{ userStore.realName || userStore.username }}</span>

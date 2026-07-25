@@ -5,6 +5,11 @@ export function getPendingApprovals(params) {
   return request.get('/api/v1/approve/pending', { params })
 }
 
+// 待审批统计（总数/紧急/超时/今日已处理）
+export function getPendingStats() {
+  return request.get('/api/v1/approve/pending/stats')
+}
+
 // 审批详情
 export function getApprovalDetail(id) {
   return request.get(`/api/v1/approve/${id}`)

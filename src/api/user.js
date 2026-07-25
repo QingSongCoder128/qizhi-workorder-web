@@ -84,3 +84,10 @@ export function getUsersByRole(roleCode) {
 export function changePassword(data) {
   return request.put('/api/v1/user/password', data)
 }
+
+// 头像上传
+export function uploadAvatar(formData) {
+  return request.post('/api/v1/user/avatar/upload', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  })
+}

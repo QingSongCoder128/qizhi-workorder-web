@@ -1,22 +1,37 @@
-<template>
-  <div class="page-container">
-    <el-page-header @back="$router.back()" class="approve-page-header">
-      <template #content>
-        <div class="header-content">
-          <span class="header-title">审批操作</span>
-          <el-tag v-if="detail.priority === 'URGENT'" type="danger" size="small" effect="dark">紧急</el-tag>
-          <el-tag v-if="detail.status" :type="ORDER_STATUS[detail.status]?.tag" size="small">
-            {{ ORDER_STATUS[detail.status]?.label || detail.status }}
-          </el-tag>
+﻿<template>
+  <div class="page-container approve-detail-page">
+    <!-- 顶部信息横幅 -->
+    <div class="detail-banner">
+      <div class="banner-bg"></div>
+      <div class="banner-body">
+        <div class="banner-left">
+          <el-button class="back-btn" circle @click="$router.back()">
+            <el-icon><ArrowLeft /></el-icon>
+          </el-button>
+          <div class="banner-info">
+            <div class="banner-title">
+              {{ detail.title || '加载中...' }}
+              <el-tag v-if="detail.priority === 'URGENT'" type="danger" size="small" effect="dark">紧急</el-tag>
+              <el-tag v-if="detail.status" :type="ORDER_STATUS[detail.status]?.tag" size="small">
+                {{ ORDER_STATUS[detail.status]?.label || detail.status }}
+              </el-tag>
+            </div>
+            <div class="banner-meta">
+              <span class="mono-text">{{ detail.orderNo }}</span>
+              <span><el-icon><User /></el-icon>{{ detail.submitterName }}</span>
+              <span><el-icon><Clock /></el-icon>{{ formatDate(detail.createdAt) }}</span>
+              <span v-if="detail.type"><el-icon><Folder /></el-icon>{{ ORDER_TYPE[detail.type]?.label || detail.type }}</span>
+            </div>
+          </div>
         </div>
-      </template>
-    </el-page-header>
+      </div>
+    </div>
 
     <div v-loading="loading">
       <el-row :gutter="20">
         <el-col :span="16">
           <!-- 工单信息 -->
-          <div class="page-card section-card">
+          <div class="section-card">
             <div class="section-title"><el-icon><Document /></el-icon> 工单信息</div>
             <el-descriptions :column="2" border>
               <el-descriptions-item label="工单编号">
@@ -38,7 +53,7 @@
           </div>
 
           <!-- AI分析 -->
-          <div v-if="detail.aiCategory || detail.aiConfidence" class="page-card section-card ai-section">
+          <div v-if="detail.aiCategory || detail.aiConfidence" class="section-card ai-section">
             <div class="section-title ai-title">
               <div class="ai-title-icon"><el-icon><MagicStick /></el-icon></div>
               AI 智能分析结果
@@ -73,7 +88,7 @@
           </div>
 
           <!-- 审批操作 -->
-          <div class="page-card section-card action-section">
+          <div class="section-card action-section">
             <div class="section-title"><el-icon><Edit /></el-icon> 审批操作</div>
             <el-form label-width="80px">
               <el-form-item label="审批意见">
@@ -116,9 +131,20 @@
 
         <el-col :span="8">
           <!-- 审批流程 -->
-          <div class="page-card section-card">
+          <div class="section-card">
             <div class="section-title"><el-icon><Stamp /></el-icon> 审批流程</div>
             <ApprovalTimeline :nodes="approvalNodes" />
+          </div>
+
+          <!-- 审批须知 -->
+          <div class="section-card notice-card">
+            <div class="section-title"><el-icon><Bell /></el-icon> 审批须知</div>
+            <ul class="notice-list">
+              <li>驳回操作必须填写驳回原因，提交人可修改后重新提交</li>
+              <li>紧急工单审批时限 1 小时，普通工单 4 小时，低优先级 12 小时</li>
+              <li>超时未处理将触发督办通知，并记录超时标记</li>
+              <li>转交后由新审批人继续处理，加签会在当前节点后新增审批人</li>
+            </ul>
           </div>
         </el-col>
       </el-row>
@@ -202,6 +228,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { ArrowLeft, User, Clock, Folder, Bell } from '@element-plus/icons-vue'
 import { getApprovalDetail, approveOrder, rejectOrder, transferOrder, addApprovalNode, removeApprovalNode } from '@/api/approve'
 import { getUsersByRole } from '@/api/user'
 import { ORDER_STATUS, ORDER_TYPE, AI_CATEGORY } from '@/utils/constants'
@@ -382,146 +409,250 @@ async function handleRemoveNode() {
 </script>
 
 <style scoped lang="scss">
-.approve-page-header {
-  margin-bottom: 20px;
-}
+.approve-detail-page {
+  // 顶部横幅
+  .detail-banner {
+    position: relative;
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 
-.header-content {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+    .banner-bg {
+      height: 72px;
+      background: linear-gradient(135deg, #4f6ef7 0%, #7c3aed 100%);
+    }
 
-  .header-title {
-    font-size: 16px;
-    font-weight: 600;
+    .banner-body {
+      padding: 0 24px 18px;
+      margin-top: -32px;
+      position: relative;
+
+      .banner-left {
+        display: flex;
+        align-items: flex-end;
+        gap: 16px;
+
+        .back-btn {
+          width: 40px;
+          height: 40px;
+          background: #fff;
+          border: none;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+          font-size: 16px;
+          flex-shrink: 0;
+
+          &:hover {
+            color: #4f6ef7;
+          }
+        }
+
+        .banner-info {
+          padding-bottom: 2px;
+          min-width: 0;
+
+          .banner-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1e293b;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 8px;
+          }
+
+          .banner-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 13px;
+            color: #64748b;
+            flex-wrap: wrap;
+
+            span {
+              display: flex;
+              align-items: center;
+              gap: 5px;
+
+              .el-icon {
+                color: #4f6ef7;
+                font-size: 14px;
+              }
+            }
+          }
+        }
+      }
+    }
   }
-}
 
-.section-card {
-  margin-bottom: 20px;
-}
+  // 通用卡片
+  .section-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 22px 24px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    margin-bottom: 20px;
+  }
 
-.section-title {
-  font-size: 15px;
-  font-weight: 600;
-  color: $text-primary;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-
-  .el-icon { color: $primary-color; }
-}
-
-.mono-text {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  color: $text-secondary;
-}
-
-.order-title {
-  font-weight: 600;
-  font-size: 14px;
-}
-
-.order-detail-text {
-  line-height: 1.7;
-  white-space: pre-wrap;
-  color: $text-secondary;
-}
-
-// AI 分析区域
-.ai-section {
-  background: linear-gradient(135deg, #faf5ff 0%, #f0f0ff 100%);
-  border: 1px solid rgba(99, 102, 241, 0.12);
-}
-
-.ai-title {
-  .ai-title-icon {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  .section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 16px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    .el-icon { color: #fff; font-size: 14px; }
-  }
-}
+    gap: 8px;
 
-.ai-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
-
-  .ai-item {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-
-    .ai-label {
-      font-size: 12px;
-      color: $text-muted;
-      font-weight: 500;
-    }
-
-    .ai-value {
-      font-size: 13px;
-      color: $text-primary;
-      line-height: 1.5;
-    }
-
-    .ai-highlight {
-      font-weight: 600;
-      color: #6366f1;
-      font-size: 14px;
-    }
-
-    .confidence-bar {
-      width: 100%;
-      max-width: 200px;
-    }
-  }
-}
-
-// 审批操作区域
-.action-section {
-  border: 1px solid rgba(79, 110, 247, 0.15);
-  background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
-}
-
-.action-btns {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  align-items: center;
-
-  .action-btn {
-    min-width: 96px;
-    font-weight: 500;
+    .el-icon { color: #4f6ef7; }
   }
 
-  .action-btn--main {
-    min-width: 120px;
-    font-weight: 600;
-    letter-spacing: 1px;
-  }
-
-  .action-btn--more {
-    color: $text-secondary;
-  }
-}
-
-.action-tips {
-  margin-top: 12px;
-  font-size: 12px;
-  color: $text-muted;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-
-  .el-icon {
+  .mono-text {
+    font-family: 'JetBrains Mono', monospace;
     font-size: 13px;
+    color: #64748b;
+  }
+
+  .order-title {
+    font-weight: 600;
+    font-size: 14px;
+  }
+
+  .order-detail-text {
+    line-height: 1.7;
+    white-space: pre-wrap;
+    color: #64748b;
+  }
+
+  // AI 分析区域
+  .ai-section {
+    background: linear-gradient(135deg, #faf5ff 0%, #f0f0ff 100%);
+    border: 1px solid rgba(99, 102, 241, 0.12);
+  }
+
+  .ai-title {
+    .ai-title-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      .el-icon { color: #fff; font-size: 14px; }
+    }
+  }
+
+  .ai-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+
+    .ai-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+
+      .ai-label {
+        font-size: 12px;
+        color: #94a3b8;
+        font-weight: 500;
+      }
+
+      .ai-value {
+        font-size: 13px;
+        color: #1e293b;
+        line-height: 1.5;
+      }
+
+      .ai-highlight {
+        font-weight: 600;
+        color: #6366f1;
+        font-size: 14px;
+      }
+
+      .confidence-bar {
+        width: 100%;
+        max-width: 200px;
+      }
+    }
+  }
+
+  // 审批操作区域
+  .action-section {
+    border: 1px solid rgba(79, 110, 247, 0.15);
+    background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
+  }
+
+  .action-btns {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+
+    .action-btn {
+      min-width: 100px;
+      font-weight: 500;
+      border-radius: 8px;
+    }
+
+    .action-btn--main {
+      min-width: 130px;
+      font-weight: 600;
+      letter-spacing: 1px;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    }
+
+    .action-btn--more {
+      color: #64748b;
+    }
+  }
+
+  .action-tips {
+    margin-top: 12px;
+    font-size: 12px;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    .el-icon { font-size: 13px; }
+  }
+
+  // 审批须知
+  .notice-card {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border: 1px solid rgba(245, 158, 11, 0.15);
+
+    .section-title .el-icon { color: #f59e0b; }
+
+    .notice-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+
+      li {
+        position: relative;
+        padding: 8px 0 8px 18px;
+        font-size: 13px;
+        color: #78350f;
+        line-height: 1.6;
+
+        &::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 15px;
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: #f59e0b;
+        }
+
+        & + li {
+          border-top: 1px dashed rgba(245, 158, 11, 0.2);
+        }
+      }
+    }
   }
 }
 </style>
