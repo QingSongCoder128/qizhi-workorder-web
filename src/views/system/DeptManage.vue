@@ -9,8 +9,10 @@
     </div>
 
     <div class="page-card">
-      <el-table :data="tableData" v-loading="loading" row-key="id" default-expand-all
-                :tree-props="{ children: 'children' }" empty-text=" ">
+      <el-table
+        v-loading="loading" :data="tableData" row-key="id" default-expand-all
+        :tree-props="{ children: 'children' }" empty-text=" "
+      >
         <el-table-column prop="deptName" label="部门名称" min-width="220">
           <template #default="{ row }">
             <div class="dept-name-cell">
@@ -50,9 +52,11 @@
           <el-input v-model="form.deptCode" placeholder="如 DEPT_IT" :disabled="!!editingId" />
         </el-form-item>
         <el-form-item label="上级部门">
-          <el-tree-select v-model="form.parentId" :data="tableData"
-                          :props="{ label: 'deptName', value: 'id', children: 'children' }"
-                          check-strictly clearable style="width:100%;" placeholder="无（顶级部门）" />
+          <el-tree-select
+            v-model="form.parentId" :data="tableData"
+            :props="{ label: 'deptName', value: 'id', children: 'children' }"
+            check-strictly clearable style="width:100%;" placeholder="无（顶级部门）"
+          />
         </el-form-item>
         <el-form-item label="排序">
           <el-input-number v-model="form.sortOrder" :min="0" :max="999" />

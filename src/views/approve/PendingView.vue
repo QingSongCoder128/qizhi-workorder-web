@@ -54,7 +54,7 @@
         </div>
       </div>
 
-      <el-table :data="filteredData" v-loading="loading" :row-class-name="rowClass" empty-text=" " stripe>
+      <el-table v-loading="loading" :data="filteredData" :row-class-name="rowClass" empty-text=" " stripe>
         <el-table-column prop="orderNo" label="工单编号" width="175">
           <template #default="{ row }">
             <span class="order-no">{{ row.orderNo }}</span>
@@ -81,8 +81,10 @@
           <template #default="{ row }">
             <div class="wait-cell">
               <div class="wait-bar">
-                <div class="wait-bar-inner" :class="{ timeout: isTimeout(row) }"
-                  :style="{ width: waitPercent(row) + '%' }"></div>
+                <div
+                  class="wait-bar-inner" :class="{ timeout: isTimeout(row) }"
+                  :style="{ width: waitPercent(row) + '%' }"
+                ></div>
               </div>
               <span class="wait-text" :class="{ 'timeout-text': isTimeout(row) }">{{ waitTime(row.createdAt) }}</span>
             </div>

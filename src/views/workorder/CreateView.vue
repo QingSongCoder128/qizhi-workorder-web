@@ -32,17 +32,21 @@
           <el-col :span="12">
             <el-form-item label="紧急程度">
               <div class="urgent-switch">
-                <el-switch v-model="form.urgent" active-text="紧急" inactive-text="普通"
-                           active-color="#ef4444" />
-                <span class="urgent-hint" v-if="form.urgent">紧急工单将优先审批，60分钟超时督办</span>
+                <el-switch
+                  v-model="form.urgent" active-text="紧急" inactive-text="普通"
+                  active-color="#ef4444"
+                />
+                <span v-if="form.urgent" class="urgent-hint">紧急工单将优先审批，60分钟超时督办</span>
               </div>
             </el-form-item>
           </el-col>
         </el-row>
 
         <el-form-item label="详细描述" prop="detail">
-          <el-input v-model="form.detail" type="textarea" :rows="5"
-                    placeholder="请详细描述问题现象、影响范围、期望解决时间等信息" maxlength="2000" show-word-limit />
+          <el-input
+            v-model="form.detail" type="textarea" :rows="5"
+            placeholder="请详细描述问题现象、影响范围、期望解决时间等信息" maxlength="2000" show-word-limit
+          />
         </el-form-item>
 
         <el-form-item label="附件上传">

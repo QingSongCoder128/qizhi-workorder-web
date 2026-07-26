@@ -55,8 +55,8 @@ export const APPROVE_ACTION = {
   APPROVE: '通过',
   REJECT: '驳回',
   TRANSFER: '转交',
-  ADD_SIGN: '加签',
-  REDUCE_SIGN: '减签'
+  ADD_NODE: '加签',
+  REMOVE_NODE: '减签'
 }
 
 // 消息类型

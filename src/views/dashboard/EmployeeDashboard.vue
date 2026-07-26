@@ -10,8 +10,8 @@
     </div>
 
     <!-- 指标 -->
-    <div class="stat-grid" v-loading="loading">
-      <div class="stat-card" v-for="c in cards" :key="c.label" @click="$router.push('/workorder/my')">
+    <div v-loading="loading" class="stat-grid">
+      <div v-for="c in cards" :key="c.label" class="stat-card" @click="$router.push('/workorder/my')">
         <div class="stat-icon" :style="{ background: c.bg, color: c.color }">
           <el-icon :size="17"><component :is="c.icon" /></el-icon>
         </div>
@@ -47,7 +47,7 @@
             <el-link type="primary" :underline="false" @click="$router.push('/workorder/my')">查看全部</el-link>
           </div>
           <div class="order-list">
-            <div class="order-item" v-for="o in recentOrders" :key="o.id" @click="$router.push(`/workorder/detail/${o.id}`)">
+            <div v-for="o in recentOrders" :key="o.id" class="order-item" @click="$router.push(`/workorder/detail/${o.id}`)">
               <div class="order-main">
                 <span class="order-title">{{ o.title }}</span>
                 <el-tag :type="statusTag(o.status)" size="small" effect="light" round>{{ statusLabel(o.status) }}</el-tag>
@@ -69,7 +69,7 @@
             <el-link type="primary" :underline="false" @click="$router.push('/message')">消息中心</el-link>
           </div>
           <div class="msg-list">
-            <div class="msg-item" v-for="m in messages" :key="m.id" @click="$router.push('/message')">
+            <div v-for="m in messages" :key="m.id" class="msg-item" @click="$router.push('/message')">
               <div class="msg-icon" :style="{ color: msgColor(m.msgType) }">
                 <el-icon :size="15"><component :is="msgIcon(m.msgType)" /></el-icon>
               </div>
@@ -90,8 +90,24 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Plus } from '@element-plus/icons-vue'
-import * as echarts from 'echarts'
+import * as echarts from 'echarts/core'
+import { LineChart, PieChart } from 'echarts/charts'
+import {
+  GridComponent,
+  LegendComponent,
+  TooltipComponent
+} from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
 import { getMyWorkOrders } from '@/api/workOrder'
+
+echarts.use([
+  LineChart,
+  PieChart,
+  GridComponent,
+  LegendComponent,
+  TooltipComponent,
+  CanvasRenderer
+])
 import { getMessageList } from '@/api/message'
 import { useUserStore } from '@/store/user'
 import { ORDER_STATUS, MSG_TYPE, resolveEnum } from '@/utils/constants'

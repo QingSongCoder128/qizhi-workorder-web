@@ -18,13 +18,13 @@
           <el-option label="近30天" value="30" />
           <el-option label="全部" value="all" />
         </el-select>
-        <el-button type="primary" :icon="Download" @click="handleExport" :loading="exporting">导出报表</el-button>
+        <el-button type="primary" :icon="Download" :loading="exporting" @click="handleExport">导出报表</el-button>
       </div>
     </div>
 
     <!-- 指标 -->
-    <div class="stat-grid" v-loading="dataLoading">
-      <div class="stat-card" v-for="card in statCards" :key="card.key" @click="card.route && $router.push(card.route)">
+    <div v-loading="dataLoading" class="stat-grid">
+      <div v-for="card in statCards" :key="card.key" class="stat-card" @click="card.route && $router.push(card.route)">
         <div class="stat-icon" :style="{ background: card.bg, color: card.color }">
           <el-icon :size="17"><component :is="card.icon" /></el-icon>
         </div>
@@ -60,7 +60,7 @@
         <div class="panel">
           <div class="panel-header"><span class="panel-title">部门工单排行</span></div>
           <div class="dept-rank">
-            <div class="dept-item" v-for="(d, i) in deptList" :key="d.name">
+            <div v-for="(d, i) in deptList" :key="d.name" class="dept-item">
               <span class="dept-idx">{{ i + 1 }}</span>
               <span class="dept-name">{{ d.name }}</span>
               <div class="dept-bar-wrap">
@@ -81,9 +81,11 @@
           <div class="panel-header"><span class="panel-title">状态占比</span></div>
           <div class="status-bar-wrap">
             <div class="status-bar">
-              <div v-for="s in statusSegments" :key="s.label" class="status-segment"
-                   :style="{ width: s.percent + '%', background: s.color }"
-                   :title="`${s.label}: ${s.count}单 (${s.percent}%)`"></div>
+              <div
+                v-for="s in statusSegments" :key="s.label" class="status-segment"
+                :style="{ width: s.percent + '%', background: s.color }"
+                :title="`${s.label}: ${s.count}单 (${s.percent}%)`"
+              ></div>
             </div>
             <div class="status-legend">
               <span v-for="s in statusSegments" :key="s.label" class="legend-item">
@@ -125,8 +127,23 @@
 import { ref, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Download, Timer } from '@element-plus/icons-vue'
-import * as echarts from 'echarts'
+import * as echarts from 'echarts/core'
+import { LineChart } from 'echarts/charts'
+import {
+  GridComponent,
+  LegendComponent,
+  TooltipComponent
+} from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
 import { exportExcel } from '@/api/statistics'
+
+echarts.use([
+  LineChart,
+  GridComponent,
+  LegendComponent,
+  TooltipComponent,
+  CanvasRenderer
+])
 import { getAllWorkOrders } from '@/api/workOrder'
 import { getDeptList } from '@/api/user'
 import { useUserStore } from '@/store/user'

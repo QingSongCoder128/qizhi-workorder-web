@@ -10,8 +10,10 @@
       <div class="tab-item" :class="{ active: !query.status }" @click="switchTab('')">
         全部 <span class="tab-count">{{ total }}</span>
       </div>
-      <div class="tab-item" v-for="(v, k) in filterStatuses" :key="k"
-           :class="{ active: query.status === k }" @click="switchTab(k)">
+      <div
+        v-for="(v, k) in filterStatuses" :key="k" class="tab-item"
+        :class="{ active: query.status === k }" @click="switchTab(k)"
+      >
         {{ v.label }}
       </div>
     </div>
@@ -25,14 +27,18 @@
         <el-select v-model="query.priority" placeholder="优先级" clearable style="width: 120px" @change="fetchList">
           <el-option v-for="(v, k) in PRIORITY" :key="k" :label="v.label" :value="k" />
         </el-select>
-        <el-input v-model="query.keyword" placeholder="搜索标题/编号" clearable style="width: 200px"
-                  :prefix-icon="Search" @keyup.enter="fetchList" @clear="fetchList" />
+        <el-input
+          v-model="query.keyword" placeholder="搜索标题/编号" clearable style="width: 200px"
+          :prefix-icon="Search" @keyup.enter="fetchList" @clear="fetchList"
+        />
         <el-button type="primary" :icon="Search" @click="fetchList">查询</el-button>
       </div>
 
       <!-- 表格 -->
-      <el-table :data="tableData" v-loading="loading" @row-click="goDetail" class="order-table"
-                :row-class-name="rowClassName" empty-text=" ">
+      <el-table
+        v-loading="loading" :data="tableData" class="order-table" :row-class-name="rowClassName"
+        empty-text=" " @row-click="goDetail"
+      >
         <el-table-column prop="orderNo" label="工单编号" width="175">
           <template #default="{ row }">
             <span class="order-no">{{ row.orderNo }}</span>
@@ -48,8 +54,10 @@
         </el-table-column>
         <el-table-column prop="type" label="类型" width="110">
           <template #default="{ row }">
-            <el-tag size="small" effect="plain" :color="ORDER_TYPE[row.type]?.color + '12'"
-                    :style="{ color: ORDER_TYPE[row.type]?.color, borderColor: ORDER_TYPE[row.type]?.color + '40' }">
+            <el-tag
+              size="small" effect="plain" :color="ORDER_TYPE[row.type]?.color + '12'"
+              :style="{ color: ORDER_TYPE[row.type]?.color, borderColor: ORDER_TYPE[row.type]?.color + '40' }"
+            >
               {{ ORDER_TYPE[row.type]?.label || row.type }}
             </el-tag>
           </template>

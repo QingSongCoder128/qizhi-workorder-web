@@ -76,8 +76,10 @@
               <div class="ai-item">
                 <span class="ai-label">分类置信度</span>
                 <div class="confidence-bar">
-                  <el-progress :percentage="Math.round((detail.aiConfidence || 0) * 100)"
-                    :stroke-width="10" :color="confidenceColor" :format="(p) => p + '%'" />
+                  <el-progress
+                    :percentage="Math.round((detail.aiConfidence || 0) * 100)"
+                    :stroke-width="10" :color="confidenceColor" :format="(p) => p + '%'"
+                  />
                 </div>
               </div>
               <div class="ai-item">
@@ -86,9 +88,9 @@
                   <PriorityTag v-if="detail.priority" :priority="detail.priority" />
                   <span v-else class="ai-value">正常</span>
                 </div>
-                <span class="ai-note" v-if="detail.aiPriorityReason">判定依据：{{ detail.aiPriorityReason }}</span>
+                <span v-if="detail.aiPriorityReason" class="ai-note">判定依据：{{ detail.aiPriorityReason }}</span>
               </div>
-              <div class="ai-item" v-if="detail.aiSuggestion">
+              <div v-if="detail.aiSuggestion" class="ai-item">
                 <span class="ai-label">预审建议</span>
                 <span class="ai-value">{{ detail.aiSuggestion }}</span>
               </div>
@@ -109,13 +111,13 @@
               </el-form-item>
               <el-form-item>
                 <div class="action-btns">
-                  <el-button type="success" size="large" :loading="submitting" @click="handleApprove" class="action-btn action-btn--main">
+                  <el-button type="success" size="large" :loading="submitting" class="action-btn action-btn--main" @click="handleApprove">
                     <el-icon><Check /></el-icon>通过
                   </el-button>
-                  <el-button type="danger" plain size="large" :loading="submitting" @click="handleReject" class="action-btn">
+                  <el-button type="danger" plain size="large" :loading="submitting" class="action-btn" @click="handleReject">
                     <el-icon><Close /></el-icon>驳回
                   </el-button>
-                  <el-button plain size="large" :loading="submitting" @click="openTransferDialog" class="action-btn">
+                  <el-button plain size="large" :loading="submitting" class="action-btn" @click="openTransferDialog">
                     <el-icon><Switch /></el-icon>转交
                   </el-button>
                   <el-dropdown trigger="click" @command="handleMoreCommand">

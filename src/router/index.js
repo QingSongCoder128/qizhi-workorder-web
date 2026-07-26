@@ -112,6 +112,12 @@ const routes = [
     component: () => import('@/views/error/403.vue'),
     meta: { public: true }
   },
+  {
+    path: '/network-error',
+    name: 'NetworkError',
+    component: () => import('@/views/error/NetworkError.vue'),
+    meta: { public: true }
+  },
   // 404 兜底
   {
     path: '/:pathMatch(.*)*',

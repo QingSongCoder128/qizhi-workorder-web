@@ -53,6 +53,9 @@ request.interceptors.response.use(
       }
     } else {
       ElMessage.error('网络连接失败')
+      if (router.currentRoute.value.path !== '/network-error') {
+        router.push('/network-error')
+      }
     }
     return Promise.reject(error)
   }

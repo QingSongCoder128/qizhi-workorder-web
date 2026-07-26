@@ -2,13 +2,15 @@
   <div class="page-container">
     <div class="page-header">
       <div class="page-title"><el-icon><Files /></el-icon> 全部工单</div>
-      <el-button type="primary" plain :icon="Download" @click="handleExport" :loading="exporting">导出Excel</el-button>
+      <el-button type="primary" plain :icon="Download" :loading="exporting" @click="handleExport">导出Excel</el-button>
     </div>
 
     <div class="page-card">
       <div class="search-bar">
-        <el-input v-model="query.keyword" placeholder="搜索编号/标题" clearable style="width: 200px"
-                  :prefix-icon="Search" @keyup.enter="fetchList" @clear="fetchList" />
+        <el-input
+          v-model="query.keyword" placeholder="搜索编号/标题" clearable style="width: 200px"
+          :prefix-icon="Search" @keyup.enter="fetchList" @clear="fetchList"
+        />
         <el-select v-model="query.status" placeholder="状态" clearable style="width: 130px" @change="resetAndFetch">
           <el-option v-for="(v, k) in ORDER_STATUS" :key="k" :label="v.label" :value="k" />
         </el-select>
@@ -18,7 +20,7 @@
         <el-button type="primary" :icon="Search" @click="fetchList">查询</el-button>
       </div>
 
-      <el-table :data="tableData" v-loading="loading" empty-text=" " :row-class-name="rowClassName">
+      <el-table v-loading="loading" :data="tableData" empty-text=" " :row-class-name="rowClassName">
         <el-table-column prop="title" label="标题" min-width="230" show-overflow-tooltip>
           <template #default="{ row }">
             <div class="order-cell">

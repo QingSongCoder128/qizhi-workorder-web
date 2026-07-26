@@ -5,7 +5,7 @@
       <el-button type="primary" :icon="Plus" @click="openDialog()">新增模板</el-button>
     </div>
 
-    <div class="tpl-list" v-loading="loading">
+    <div v-loading="loading" class="tpl-list">
       <div v-for="tpl in templates" :key="tpl.id" class="tpl-card">
         <div class="tpl-card__header">
           <div class="tpl-card__title">

@@ -1,6 +1,6 @@
 <template>
   <div class="page-container">
-    <el-page-header @back="$router.back()" style="margin-bottom: 20px;">
+    <el-page-header style="margin-bottom: 20px;" @back="$router.back()">
       <template #content>
         <div class="detail-header">
           <span class="detail-header-title">{{ detail.title || '工单详情' }}</span>
@@ -61,9 +61,11 @@
             <!-- 附件 -->
             <div v-if="detail.attachments?.length" class="attachment-section">
               <span class="attach-label">附件：</span>
-              <el-image v-for="(url, i) in detail.attachments" :key="i"
+              <el-image
+                v-for="(url, i) in detail.attachments" :key="i"
                 :src="url" :preview-src-list="detail.attachments"
-                fit="cover" class="attach-img" />
+                fit="cover" class="attach-img"
+              />
             </div>
 
             <!-- 驳回原因 + 重新提交 -->
@@ -103,8 +105,10 @@
               <div class="ai-item">
                 <span class="ai-label">分类置信度</span>
                 <div class="confidence-bar">
-                  <el-progress :percentage="Math.round((detail.aiConfidence || 0) * 100)"
-                    :stroke-width="10" :color="confidenceColor" :format="(p) => p + '%'" />
+                  <el-progress
+                    :percentage="Math.round((detail.aiConfidence || 0) * 100)"
+                    :stroke-width="10" :color="confidenceColor" :format="(p) => p + '%'"
+                  />
                 </div>
               </div>
               <div class="ai-item">
@@ -113,7 +117,7 @@
                   <PriorityTag v-if="detail.priority" :priority="detail.priority" />
                   <span v-else class="ai-value">正常</span>
                 </div>
-                <span class="ai-note" v-if="detail.aiPriorityReason">判定依据：{{ detail.aiPriorityReason }}</span>
+                <span v-if="detail.aiPriorityReason" class="ai-note">判定依据：{{ detail.aiPriorityReason }}</span>
               </div>
               <div class="ai-item">
                 <span class="ai-label">预审建议</span>
@@ -124,7 +128,7 @@
                 <el-tag v-if="detail.aiSensitiveWords" type="danger" size="small">{{ detail.aiSensitiveWords }}</el-tag>
                 <span v-else class="ai-safe-text">未检测到敏感内容</span>
               </div>
-              <div class="ai-item" v-if="detail.aiAbnormal">
+              <div v-if="detail.aiAbnormal" class="ai-item">
                 <span class="ai-label">异常标记</span>
                 <el-alert type="warning" :closable="false" show-icon style="padding: 4px 12px;">
                   <template #title>AI识别异常，请人工核对</template>
@@ -182,13 +186,12 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Edit, MagicStick, Stamp, CircleCheck, WarningFilled, RefreshRight, RemoveFilled, User } from '@element-plus/icons-vue'
-import { ORDER_STATUS, ORDER_TYPE, AI_CATEGORY, DEPT_MAP, safeText, emptyHint, formatConfidence } from '@/utils/constants'
+import { ORDER_STATUS, ORDER_TYPE, AI_CATEGORY, DEPT_MAP, safeText } from '@/utils/constants'
 import { getWorkOrderDetail, resubmitWorkOrder, revokeWorkOrder } from '@/api/workOrder'
 import { getApprovalRecordsByWorkOrder } from '@/api/approve'
 import { getUserList } from '@/api/user'
 import { useUserStore } from '@/store/user'
 import { formatDate } from '@/utils/format'
-import StatusTag from '@/components/StatusTag.vue'
 import PriorityTag from '@/components/PriorityTag.vue'
 import ApprovalTimeline from '@/components/ApprovalTimeline.vue'
 import WorkOrderTimeline from '@/components/WorkOrderTimeline.vue'

@@ -7,8 +7,10 @@
 
     <div class="page-card">
       <div class="search-bar">
-        <el-input v-model="query.keyword" placeholder="搜索账号/姓名" clearable style="width: 200px"
-                  :prefix-icon="Search" @keyup.enter="fetchList" @clear="fetchList" />
+        <el-input
+          v-model="query.keyword" placeholder="搜索账号/姓名" clearable style="width: 200px"
+          :prefix-icon="Search" @keyup.enter="fetchList" @clear="fetchList"
+        />
         <el-select v-model="query.roleCode" placeholder="角色筛选" clearable style="width: 130px" @change="fetchList">
           <el-option label="管理员" value="ADMIN" />
           <el-option label="审批人" value="APPROVER" />
@@ -17,7 +19,7 @@
         <el-button type="primary" :icon="Search" @click="fetchList">查询</el-button>
       </div>
 
-      <el-table :data="tableData" v-loading="loading" empty-text=" ">
+      <el-table v-loading="loading" :data="tableData" empty-text=" ">
         <el-table-column prop="username" label="账号" width="130">
           <template #default="{ row }">
             <span style="font-family: var(--font-mono, monospace); font-size: 13px;">{{ row.username }}</span>

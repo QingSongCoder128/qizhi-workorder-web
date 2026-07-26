@@ -9,7 +9,7 @@
     </div>
 
     <div class="page-card">
-      <el-table :data="tableData" v-loading="loading" empty-text=" ">
+      <el-table v-loading="loading" :data="tableData" empty-text=" ">
         <el-table-column prop="roleCode" label="角色编码" width="160">
           <template #default="{ row }">
             <span class="role-code">{{ row.roleCode || '—' }}</span>
@@ -57,8 +57,10 @@
           <el-input v-model="form.roleName" placeholder="如 部门经理" />
         </el-form-item>
         <el-form-item label="职责描述">
-          <el-input v-model="form.description" type="textarea" :rows="3" maxlength="200" show-word-limit
-                    placeholder="描述该角色的主要职责与权限范围" />
+          <el-input
+            v-model="form.description" type="textarea" :rows="3" maxlength="200" show-word-limit
+            placeholder="描述该角色的主要职责与权限范围"
+          />
         </el-form-item>
       </el-form>
       <template #footer>

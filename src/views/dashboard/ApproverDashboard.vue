@@ -10,8 +10,8 @@
     </div>
 
     <!-- 指标 -->
-    <div class="stat-grid" v-loading="loading">
-      <div class="stat-card" v-for="c in cards" :key="c.label" @click="$router.push('/approve/pending')">
+    <div v-loading="loading" class="stat-grid">
+      <div v-for="c in cards" :key="c.label" class="stat-card" @click="$router.push('/approve/pending')">
         <div class="stat-icon" :style="{ background: c.bg, color: c.color }">
           <el-icon :size="17"><component :is="c.icon" /></el-icon>
         </div>
@@ -38,7 +38,7 @@
             <el-link type="primary" :underline="false" @click="$router.push('/approve/pending')">全部待办</el-link>
           </div>
           <div class="order-list">
-            <div class="order-item" v-for="p in quickList" :key="p.id" @click="$router.push(`/approve/detail/${p.id}`)">
+            <div v-for="p in quickList" :key="p.id" class="order-item" @click="$router.push(`/approve/detail/${p.id}`)">
               <div class="order-main">
                 <span class="order-title">{{ p.title }}</span>
                 <el-tag :type="priorityTag(p.priority)" size="small" effect="light" round>{{ priorityLabel(p.priority) }}</el-tag>
@@ -71,7 +71,7 @@
         <el-link type="primary" :underline="false" @click="$router.push('/message')">消息中心</el-link>
       </div>
       <div class="msg-list">
-        <div class="msg-item" v-for="m in urgeMessages" :key="m.id" @click="$router.push('/message')">
+        <div v-for="m in urgeMessages" :key="m.id" class="msg-item" @click="$router.push('/message')">
           <div class="msg-icon" :style="{ color: msgColor(m.msgType) }">
             <el-icon :size="15"><component :is="msgIcon(m.msgType)" /></el-icon>
           </div>
@@ -90,8 +90,13 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { Stamp, Timer } from '@element-plus/icons-vue'
-import * as echarts from 'echarts'
+import * as echarts from 'echarts/core'
+import { PieChart } from 'echarts/charts'
+import { LegendComponent, TooltipComponent } from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
 import { getPendingApprovals } from '@/api/approve'
+
+echarts.use([PieChart, LegendComponent, TooltipComponent, CanvasRenderer])
 import { getDashboard } from '@/api/statistics'
 import { getMessageList } from '@/api/message'
 import { useUserStore } from '@/store/user'

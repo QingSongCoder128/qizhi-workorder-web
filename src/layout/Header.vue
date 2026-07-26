@@ -1,7 +1,7 @@
 <template>
   <header class="app-header">
     <div class="header-left">
-      <button class="collapse-btn" @click="$emit('toggle-sidebar')" :title="collapsed ? '展开菜单' : '收起菜单'">
+      <button class="collapse-btn" :title="collapsed ? '展开菜单' : '收起菜单'" @click="$emit('toggle-sidebar')">
         <el-icon :size="18">
           <component :is="collapsed ? 'Expand' : 'Fold'" />
         </el-icon>
@@ -14,7 +14,7 @@
 
     <div class="header-right">
       <!-- 消息 -->
-      <button class="header-action" @click="$router.push('/message')" title="消息中心">
+      <button class="header-action" title="消息中心" @click="$router.push('/message')">
         <el-badge :value="messageStore.unreadCount" :hidden="!messageStore.unreadCount" :max="99">
           <el-icon :size="18"><Bell /></el-icon>
         </el-badge>
@@ -24,7 +24,7 @@
       <div class="header-divider"></div>
 
       <!-- 用户 -->
-      <el-dropdown trigger="click" @command="handleCommand" placement="bottom-end">
+      <el-dropdown trigger="click" placement="bottom-end" @command="handleCommand">
         <button class="user-trigger">
           <el-avatar :size="30" :src="userStore.avatarUrl || undefined" class="user-avatar">
             {{ (userStore.realName || userStore.username || 'U').charAt(0) }}

@@ -4,10 +4,10 @@
     <div class="sidebar-logo" @click="$router.push('/dashboard')">
       <div class="logo-mark">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" opacity="0.9"/>
-          <rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" opacity="0.5"/>
-          <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" opacity="0.5"/>
-          <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" opacity="0.3"/>
+          <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" opacity="0.9" />
+          <rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" opacity="0.5" />
+          <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" opacity="0.5" />
+          <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" opacity="0.3" />
         </svg>
       </div>
       <transition name="fade">
@@ -44,7 +44,7 @@
         </div>
 
         <!-- 审批 -->
-        <div class="nav-section" v-if="isApproverOrAdmin">
+        <div v-if="isApproverOrAdmin" class="nav-section">
           <p v-show="!collapsed" class="nav-group-title">审批中心</p>
           <router-link to="/approve/pending" class="nav-item" :class="{ active: $route.path.startsWith('/approve/pending') || $route.path.startsWith('/approve/detail') }">
             <el-icon :size="18"><Checked /></el-icon>
@@ -67,7 +67,7 @@
         </div>
 
         <!-- 系统管理 -->
-        <div class="nav-section" v-if="isAdmin">
+        <div v-if="isAdmin" class="nav-section">
           <p v-show="!collapsed" class="nav-group-title">系统管理</p>
           <router-link to="/system/user" class="nav-item" :class="{ active: $route.path === '/system/user' }">
             <el-icon :size="18"><User /></el-icon>

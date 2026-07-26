@@ -15,7 +15,7 @@
         style="margin-bottom: 20px;"
       />
 
-      <el-table :data="tableData" v-loading="loading" empty-text=" " row-key="id">
+      <el-table v-loading="loading" :data="tableData" empty-text=" " row-key="id">
         <el-table-column type="expand">
           <template #default="{ row }">
             <div class="dlq-expand">
@@ -71,8 +71,12 @@
         </el-table-column>
         <el-table-column label="操作" width="80" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" :disabled="row.status === 'RESOLVED'"
-                       :loading="retryingId === row.id" @click="handleRetry(row)">重试</el-button>
+            <el-button
+              link type="primary" :disabled="row.status === 'RESOLVED'"
+              :loading="retryingId === row.id" @click="handleRetry(row)"
+            >
+              重试
+            </el-button>
           </template>
         </el-table-column>
         <template #empty>

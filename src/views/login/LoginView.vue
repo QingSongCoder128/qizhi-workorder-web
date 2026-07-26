@@ -5,10 +5,10 @@
       <div class="brand-content">
         <div class="brand-logo">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-            <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" opacity="0.9"/>
-            <rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" opacity="0.5"/>
-            <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" opacity="0.5"/>
-            <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" opacity="0.3"/>
+            <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" opacity="0.9" />
+            <rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" opacity="0.5" />
+            <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" opacity="0.5" />
+            <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" opacity="0.3" />
           </svg>
           <span>企智协同工单调度系统</span>
         </div>
@@ -51,7 +51,7 @@
           <p>请输入您的账号信息</p>
         </div>
 
-        <el-form ref="formRef" :model="form" :rules="rules" size="large" @submit.prevent>
+        <el-form ref="formRef" :model="form" :rules="rules" size="large" @submit.prevent="handleLogin">
           <el-form-item prop="username">
             <el-input
               ref="usernameRef"
@@ -78,6 +78,7 @@
           <el-form-item>
             <el-button
               type="primary"
+              native-type="submit"
               :loading="loading"
               class="login-btn"
               @click="handleLogin"

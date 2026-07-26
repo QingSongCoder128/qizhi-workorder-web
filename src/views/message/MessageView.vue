@@ -6,7 +6,7 @@
         <el-badge v-if="unreadTotal > 0" :value="unreadTotal" :max="99" class="unread-badge" />
       </div>
       <div class="header-actions">
-        <el-button type="primary" plain size="small" @click="handleReadAll" :disabled="unreadTotal === 0" :loading="readingAll">
+        <el-button type="primary" plain size="small" :disabled="unreadTotal === 0" :loading="readingAll" @click="handleReadAll">
           <el-icon><Check /></el-icon> 全部已读
         </el-button>
       </div>
@@ -27,14 +27,16 @@
       </el-tabs>
 
       <!-- 消息列表（按 今天 / 昨天 / 更早 分组） -->
-      <div class="message-list" v-loading="loading">
+      <div v-loading="loading" class="message-list">
         <template v-for="group in groupedMessages" :key="group.label">
           <div class="group-divider">
             <span class="group-label">{{ group.label }}</span>
           </div>
-          <div v-for="msg in group.items" :key="msg.id"
-               class="message-item" :class="{ unread: !msg.isRead }"
-               @click="handleClick(msg)">
+          <div
+            v-for="msg in group.items" :key="msg.id"
+            class="message-item" :class="{ unread: !msg.isRead }"
+            @click="handleClick(msg)"
+          >
             <div class="msg-icon" :style="{ background: getTypeColor(msg.msgType) }">
               <el-icon :size="16" color="#fff"><component :is="getTypeIcon(msg.msgType)" /></el-icon>
             </div>
