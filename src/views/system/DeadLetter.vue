@@ -190,12 +190,12 @@ async function handleRetry(row) {
 .dlq-type {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-2;
 
   &__icon {
     width: 26px;
     height: 26px;
-    border-radius: 7px;
+    border-radius: $radius-sm;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -203,7 +203,7 @@ async function handleRetry(row) {
   }
 
   &__label {
-    font-size: 13px;
+    font-size: $text-base;
     font-weight: 500;
     color: $text-primary;
   }
@@ -213,10 +213,10 @@ async function handleRetry(row) {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  line-height: 1.35;
+  line-height: $leading-tight;
 
   &__title {
-    font-size: 13px;
+    font-size: $text-base;
     font-weight: 500;
     color: $text-primary;
     overflow: hidden;
@@ -225,60 +225,60 @@ async function handleRetry(row) {
   }
 
   &__id {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
+    font-family: $font-mono;
+    font-size: $text-xs;
     color: $text-muted;
   }
 }
 
 .dlq-error {
-  color: #ef4444;
-  font-size: 13px;
+  color: $danger;
+  font-size: $text-base;
 }
 
 .dlq-retry {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: $space-1;
 
   &__time {
-    font-size: 12px;
+    font-size: $text-xs;
     color: $text-muted;
   }
 }
 
 .dlq-expand {
-  padding: 12px 24px 16px 56px;
+  padding: $space-3 $space-6 $space-4 56px;
 
   &__label {
-    font-size: 12px;
+    font-size: $text-xs;
     font-weight: 600;
     color: $text-muted;
-    margin-bottom: 8px;
+    margin-bottom: $space-2;
   }
 
   &__json {
-    background: #0f172a;
+    background: $gray-950;
     color: #a5f3fc;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
+    font-family: $font-mono;
+    font-size: $text-xs;
     line-height: 1.6;
-    padding: 14px 16px;
-    border-radius: 8px;
+    padding: $space-3 $space-4;
+    border-radius: $radius-md;
     overflow-x: auto;
-    margin: 0 0 10px;
+    margin: 0 0 $space-3;
     white-space: pre-wrap;
     word-break: break-all;
   }
 
   &__meta {
     display: flex;
-    gap: 24px;
-    font-size: 12px;
+    gap: $space-6;
+    font-size: $text-xs;
     color: $text-secondary;
 
     b {
-      font-family: 'JetBrains Mono', monospace;
+      font-family: $font-mono;
       color: $text-primary;
       font-weight: 500;
     }

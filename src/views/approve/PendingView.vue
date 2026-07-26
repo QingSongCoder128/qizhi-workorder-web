@@ -9,11 +9,11 @@
           <div class="stat-label">待审批总数</div>
         </div>
       </div>
-      <div class="stat-card stat-card--red" :class="{ active: filter === 'urgent' }" @click="setFilter('urgent')">
+      <div class="stat-card stat-card--urgent" :class="{ active: filter === 'urgent' }" @click="setFilter('urgent')">
         <div class="stat-icon"><el-icon><WarningFilled /></el-icon></div>
         <div class="stat-info">
           <div class="stat-num">{{ stats.urgentCount }}</div>
-          <div class="stat-label">紧急工单</div>
+          <div class="stat-label">加急工单</div>
         </div>
       </div>
       <div class="stat-card stat-card--orange" :class="{ active: filter === 'timeout' }" @click="setFilter('timeout')">
@@ -66,7 +66,7 @@
               <span class="submitter-dot" :style="{ background: dotColor(row.submitterName) }">
                 {{ (row.submitterName || '?')[0] }}
               </span>
-              <el-tag v-if="row.priority === 'URGENT'" type="danger" size="small" effect="dark" class="urgent-tag">紧急</el-tag>
+              <el-tag v-if="row.priority === 'URGENT'" type="warning" size="small" effect="dark" class="urgent-tag">加急</el-tag>
               <span class="title-text">{{ row.title }}</span>
             </div>
           </template>
@@ -208,25 +208,24 @@ function dotColor(name) {
   .stats-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-    margin-bottom: 20px;
+    gap: $space-3;
+    margin-bottom: $page-gap;
   }
 
   .stat-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 18px 20px;
+    background: $bg-card;
+    border-radius: $radius-lg;
+    padding: $space-4 $space-5;
     display: flex;
     align-items: center;
-    gap: 14px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    gap: $space-3;
+    border: 1px solid $border-light;
     cursor: pointer;
-    transition: all 0.2s;
-    border: 2px solid transparent;
+    transition: all $duration-fast $ease-in-out;
 
     &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      border-color: $gray-300;
+      box-shadow: $shadow-sm;
     }
 
     &.active {
@@ -234,73 +233,74 @@ function dotColor(name) {
     }
 
     .stat-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
+      width: 36px;
+      height: 36px;
+      border-radius: $radius-md;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 17px;
       flex-shrink: 0;
     }
 
     .stat-num {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 700;
-      line-height: 1.2;
+      line-height: $leading-tight;
+      font-variant-numeric: tabular-nums;
     }
 
     .stat-label {
-      font-size: 12px;
-      color: #64748b;
-      margin-top: 2px;
+      font-size: $text-sm;
+      color: $text-muted;
+      margin-top: 1px;
     }
 
     &--blue {
-      color: #4f6ef7;
-      .stat-icon { background: rgba(79, 110, 247, 0.1); }
-      .stat-num { color: #4f6ef7; }
+      color: $brand;
+      .stat-icon { background: $brand-light; }
+      .stat-num { color: $brand; }
     }
-    &--red {
-      color: #ef4444;
-      .stat-icon { background: rgba(239, 68, 68, 0.1); }
-      .stat-num { color: #ef4444; }
+    &--urgent {
+      color: $warning;
+      .stat-icon { background: $warning-light; }
+      .stat-num { color: $warning; }
     }
     &--orange {
-      color: #f59e0b;
-      .stat-icon { background: rgba(245, 158, 11, 0.1); }
-      .stat-num { color: #f59e0b; }
+      color: $warning;
+      .stat-icon { background: $warning-light; }
+      .stat-num { color: $warning; }
     }
     &--green {
-      color: #10b981;
+      color: $success;
       cursor: default;
-      .stat-icon { background: rgba(16, 185, 129, 0.1); }
-      .stat-num { color: #10b981; }
-      &:hover { transform: none; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06); }
+      .stat-icon { background: $success-light; }
+      .stat-num { color: $success; }
+      &:hover { box-shadow: none; border-color: $border-light; }
     }
   }
 
   .table-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 20px 24px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    background: $bg-card;
+    border-radius: $radius-lg;
+    padding: $space-5;
+    border: 1px solid $border-light;
 
     .table-card-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 16px;
+      margin-bottom: $space-4;
 
       .table-title {
-        font-size: 15px;
+        font-size: $text-md;
         font-weight: 600;
-        color: #1e293b;
+        color: $text-primary;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: $space-2;
 
-        .el-icon { color: #4f6ef7; font-size: 17px; }
+        .el-icon { color: $brand; font-size: 16px; }
       }
 
       .table-actions {
@@ -311,22 +311,22 @@ function dotColor(name) {
   }
 
   .order-no {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
-    color: #64748b;
+    font-family: $font-mono;
+    font-size: $text-sm;
+    color: $text-secondary;
   }
 
   .title-cell {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: $space-2;
 
     .submitter-dot {
       width: 24px;
       height: 24px;
       border-radius: 50%;
       color: #fff;
-      font-size: 11px;
+      font-size: $text-xs;
       font-weight: 600;
       display: flex;
       align-items: center;
@@ -341,79 +341,63 @@ function dotColor(name) {
   .wait-cell {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: $space-2;
 
     .wait-bar {
       width: 48px;
       height: 6px;
-      border-radius: 3px;
-      background: #f1f5f9;
+      border-radius: $radius-full;
+      background: $gray-200;
       overflow: hidden;
       flex-shrink: 0;
 
       .wait-bar-inner {
         height: 100%;
-        border-radius: 3px;
-        background: linear-gradient(90deg, #4f6ef7, #7c3aed);
-        transition: width 0.3s;
+        border-radius: $radius-full;
+        background: $brand;
+        transition: width $duration-slow;
 
         &.timeout {
-          background: linear-gradient(90deg, #ef4444, #dc2626);
+          background: $danger;
         }
       }
     }
 
     .wait-text {
-      font-size: 12px;
-      color: #64748b;
+      font-size: $text-sm;
+      color: $text-secondary;
       white-space: nowrap;
     }
 
     .timeout-text {
-      color: #ef4444;
+      color: $danger;
       font-weight: 600;
     }
   }
 
   .empty-state {
-    padding: 48px 0;
+    padding: $space-12 0;
     text-align: center;
 
     .empty-icon {
-      font-size: 48px;
-      color: #10b981;
+      font-size: 40px;
+      color: $success;
     }
 
     .empty-text {
-      margin-top: 12px;
-      color: #64748b;
-      font-size: 14px;
+      margin-top: $space-3;
+      color: $text-muted;
+      font-size: $text-md;
     }
   }
 }
 
 :deep(.urgent-row) {
   td {
-    background-color: #fef2f2 !important;
+    background-color: #{$warning-light} !important;
   }
   td:first-child {
-    border-left: 3px solid #ef4444;
+    border-left: 3px solid $warning;
   }
-}
-
-:deep(.el-table) {
-  --el-table-border-color: #f1f5f9;
-
-  th {
-    background: #f8fafc !important;
-    color: #475569;
-    font-weight: 600;
-    font-size: 13px;
-  }
-}
-
-:deep(.el-pagination) {
-  margin-top: 16px;
-  justify-content: flex-end;
 }
 </style>

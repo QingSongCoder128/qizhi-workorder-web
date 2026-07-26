@@ -1,3 +1,5 @@
+// ========== 全局基础样式 ==========
+
 * {
   margin: 0;
   padding: 0;
@@ -6,185 +8,307 @@
 
 html, body, #app {
   height: 100%;
-  font-family: 'Inter', 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
-    'Microsoft YaHei', Arial, sans-serif;
+  font-family: $font-family;
+  font-size: $text-md;
+  line-height: $leading-normal;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   color: $text-primary;
+  background: $bg-page;
 }
 
-// 滚动条美化
+// ─── 滚动条 ───
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-  &:hover {
-    background: #94a3b8;
-  }
+  background: $gray-400;
+  border-radius: $radius-full;
+  &:hover { background: $gray-500; }
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 
-// 页面容器
+// ─── 页面容器 ───
 .page-container {
-  padding: 24px;
-  animation: fadeInUp 0.3s ease;
+  padding: $content-padding;
+  max-width: $content-max-width;
+  margin: 0 auto;
+  animation: pageIn $duration-slow $ease-out;
 }
 
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+@keyframes pageIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-// 页面标题
+// ─── 页面标题区 ───
 .page-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: $space-6;
 
   .page-title {
-    font-size: 20px;
-    font-weight: 600;
+    font-size: $text-2xl;
+    font-weight: 700;
     color: $text-primary;
+    letter-spacing: -0.02em;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: $space-3;
 
-    .el-icon {
-      font-size: 22px;
-      color: $primary-color;
+    // 标题图标：品牌色徽章样式，提升识别度
+    > .el-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: $radius-md;
+      background: $brand-light;
+      color: $brand;
+      font-size: 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
     }
   }
 
   .page-desc {
-    font-size: 13px;
+    font-size: $text-base;
     color: $text-muted;
-    margin-top: 4px;
+    margin-top: $space-1;
   }
 }
 
-// 卡片
+// ─── 卡片 ───
 .page-card {
-  background: $card-bg;
-  border-radius: $border-radius;
-  padding: 24px;
-  box-shadow: $shadow-card;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  transition: box-shadow $transition-fast;
-
-  &:hover {
-    box-shadow: $shadow-md;
-  }
+  background: $bg-card;
+  border-radius: $radius-lg;
+  padding: $space-6;
+  border: 1px solid $border-light;
+  box-shadow: $shadow-xs;
+  transition: box-shadow $duration-fast $ease-in-out;
 }
 
-// 搜索栏
+// ─── 搜索栏 ───
 .search-bar {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: $space-3;
+  margin-bottom: $space-5;
   flex-wrap: wrap;
 }
 
-// 表格操作列
+// ─── 表格操作列 ───
 .table-actions {
   display: flex;
-  gap: 8px;
+  gap: $space-2;
+  align-items: center;
 }
 
-// Element Plus 全局覆写
+// ─── Element Plus 全局覆写 ───
 .el-table {
-  --el-table-border-color: #f1f5f9;
-  --el-table-header-bg-color: #f8fafc;
-  --el-table-row-hover-bg-color: #f8fafc;
-  border-radius: $border-radius-sm;
+  --el-table-border-color: #{$table-border};
+  --el-table-header-bg-color: #{$table-header-bg};
+  --el-table-row-hover-bg-color: #{$gray-100};
+  --el-table-header-text-color: #{$text-secondary};
+  --el-table-text-color: #{$text-primary};
+  border-radius: $radius-md;
   overflow: hidden;
+  font-size: $text-base;
 
   th.el-table__cell {
     font-weight: 600;
+    font-size: $text-sm;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
     color: $text-secondary;
-    font-size: 13px;
+    padding: 10px 0;
   }
 
   td.el-table__cell {
-    font-size: 13px;
-    color: $text-primary;
+    padding: 12px 0;
+  }
+
+  .el-table__row {
+    transition: background $duration-fast $ease-in-out;
   }
 }
 
 .el-card {
-  border-radius: $border-radius;
-  border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: $shadow-card;
+  border-radius: $radius-lg;
+  border: 1px solid $border-light;
+  box-shadow: $shadow-xs;
 }
 
-.el-button--primary {
-  --el-button-bg-color: #{$primary-color};
-  --el-button-border-color: #{$primary-color};
-  --el-button-hover-bg-color: #{$primary-dark};
-  --el-button-hover-border-color: #{$primary-dark};
+.el-button {
+  font-weight: 500;
+  border-radius: $radius-md;
+  transition: all $duration-fast $ease-in-out;
+
+  &--primary {
+    --el-button-bg-color: #{$brand};
+    --el-button-border-color: #{$brand};
+    --el-button-hover-bg-color: #{$brand-hover};
+    --el-button-hover-border-color: #{$brand-hover};
+    --el-button-active-bg-color: #{$brand-active};
+    --el-button-active-border-color: #{$brand-active};
+  }
+
+  &--danger {
+    --el-button-bg-color: #{$danger};
+    --el-button-border-color: #{$danger};
+  }
 }
 
 .el-dialog {
-  border-radius: $border-radius;
+  border-radius: $radius-xl;
+  overflow: hidden;
 
   .el-dialog__header {
-    border-bottom: 1px solid #f1f5f9;
-    padding: 16px 20px;
+    border-bottom: 1px solid $border-light;
+    padding: $space-4 $space-5;
     margin-right: 0;
+    font-weight: 600;
   }
 
   .el-dialog__body {
-    padding: 20px;
+    padding: $space-5;
   }
 
   .el-dialog__footer {
-    border-top: 1px solid #f1f5f9;
-    padding: 12px 20px;
+    border-top: 1px solid $border-light;
+    padding: $space-3 $space-5;
+  }
+}
+
+.el-drawer {
+  .el-drawer__header {
+    border-bottom: 1px solid $border-light;
+    margin-bottom: 0;
+    padding: $space-4 $space-5;
+    font-weight: 600;
+  }
+
+  .el-drawer__body {
+    padding: $space-5;
   }
 }
 
 .el-pagination {
-  margin-top: 16px;
+  margin-top: $space-4;
   justify-content: flex-end;
+  --el-pagination-button-bg-color: transparent;
 }
 
-// 空状态
+.el-tag {
+  border-radius: $radius-sm;
+  font-weight: 500;
+  font-size: $text-sm;
+}
+
+.el-input {
+  --el-input-border-radius: #{$radius-md};
+}
+
+.el-select {
+  --el-select-border-radius: #{$radius-md};
+}
+
+// ─── 表单交互反馈（聚焦/悬停/错误） ───
+.el-input__wrapper,
+.el-textarea__inner {
+  transition: box-shadow $duration-fast $ease-in-out;
+}
+
+// 悬停：边框加深，给出可交互暗示
+.el-input__wrapper:hover,
+.el-textarea__inner:hover {
+  box-shadow: 0 0 0 1px #{$gray-400} inset !important;
+}
+
+// 聚焦：品牌色边框 + 柔和外发光环，明确当前焦点
+.el-input__wrapper.is-focus,
+.el-textarea__inner:focus,
+.el-select .el-input.is-focus .el-input__wrapper {
+  box-shadow: 0 0 0 1px #{$brand} inset, 0 0 0 3px rgba(37, 99, 235, 0.14) !important;
+}
+
+// 错误态：红色边框 + 淺红环，清晰但不刺眼
+.el-form-item.is-error .el-input__wrapper,
+.el-form-item.is-error .el-textarea__inner {
+  box-shadow: 0 0 0 1px #{$danger} inset, 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+}
+
+.el-form-item__error {
+  font-size: $text-sm;
+  line-height: 1.3;
+  padding-top: 3px;
+}
+
+// 表单项间距与标签
+.el-form-item__label {
+  font-weight: 500;
+  color: $text-primary;
+  font-size: $text-base;
+}
+
+// ─── 空状态 ───
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
+  padding: $space-12 $space-5;
   color: $text-muted;
 
   .empty-icon {
-    font-size: 48px;
-    margin-bottom: 16px;
-    opacity: 0.5;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: $gray-100;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin-bottom: $space-4;
+    color: $gray-400;
   }
 
   .empty-text {
-    font-size: 14px;
-    margin-bottom: 16px;
+    font-size: $text-md;
+    color: $text-secondary;
+    margin-bottom: $space-1;
+    font-weight: 500;
+  }
+
+  .empty-sub {
+    font-size: $text-sm;
+    color: $text-muted;
   }
 }
 
-// 标签徽章
+// ─── 状态点 ───
 .status-dot {
   display: inline-block;
   width: 6px;
   height: 6px;
   border-radius: 50%;
   margin-right: 6px;
+}
+
+// ─── 等宽字体（编号） ───
+.mono {
+  font-family: $font-mono;
+  font-size: $text-sm;
+  letter-spacing: -0.02em;
+}
+
+// ─── 文本截断 ───
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

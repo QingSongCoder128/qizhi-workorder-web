@@ -11,7 +11,7 @@
           <div class="tpl-card__title">
             <span class="tpl-name">{{ tpl.templateName }}</span>
             <el-tag size="small" effect="plain">{{ ORDER_TYPE[tpl.workType]?.label || '通用类型' }}</el-tag>
-            <el-tag size="small" type="info" effect="plain">{{ DEPT_MAP[tpl.deptCode] || '通用部门' }}</el-tag>
+            <el-tag size="small" type="info" effect="plain">{{ deptName(tpl.deptCode) }}</el-tag>
           </div>
           <div class="tpl-card__ops">
             <el-button link type="primary" @click="openDialog(tpl)">编辑</el-button>
@@ -62,19 +62,25 @@
         </el-form-item>
         <el-form-item label="适用部门">
           <el-select v-model="form.deptCode" placeholder="通用（全部部门）" clearable style="width: 100%;">
-            <el-option v-for="(v, k) in DEPT_MAP" :key="k" :label="v" :value="k" />
+            <el-option v-for="d in deptOptions" :key="d.deptCode" :label="d.deptName" :value="d.deptCode" />
           </el-select>
         </el-form-item>
         <el-form-item label="审批节点">
-          <div v-for="(node, i) in form.nodes" :key="i" class="node-row">
-            <el-input-number v-model="node.nodeOrder" :min="1" style="width: 90px;" controls-position="right" />
-            <el-input v-model="node.nodeName" placeholder="节点名称" style="width: 180px;" />
-            <el-select v-model="node.approverRole" placeholder="审批角色" style="width: 140px;">
-              <el-option v-for="(label, code) in ROLES" :key="code" :label="label" :value="code" />
-            </el-select>
-            <el-button link type="danger" @click="form.nodes.splice(i, 1)">删除</el-button>
+          <div class="node-editor">
+            <div v-for="(node, i) in form.nodes" :key="i" class="node-row">
+              <span class="node-order">{{ i + 1 }}</span>
+              <el-input v-model="node.nodeName" placeholder="节点名称，如 部门主管审批" class="node-name-input" />
+              <el-select v-model="node.approverRole" placeholder="审批角色" class="node-role-select">
+                <el-option v-for="(label, code) in ROLES" :key="code" :label="label" :value="code" />
+              </el-select>
+              <el-button link type="danger" class="node-del" @click="form.nodes.splice(i, 1)">
+                <el-icon><Delete /></el-icon>
+              </el-button>
+            </div>
+            <el-button type="primary" plain class="add-node-btn" @click="addNode">
+              <el-icon><Plus /></el-icon> 添加审批节点
+            </el-button>
           </div>
-          <el-button type="primary" link @click="addNode">+ 添加节点</el-button>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -88,9 +94,10 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Setting, Plus, Right, CircleCheck, Promotion, Stamp } from '@element-plus/icons-vue'
-import { ORDER_TYPE, DEPT_MAP, ROLES } from '@/utils/constants'
+import { Setting, Plus, Right, CircleCheck, Promotion, Stamp, Delete } from '@element-plus/icons-vue'
+import { ORDER_TYPE, ROLES } from '@/utils/constants'
 import { getTemplateList, getTemplateNodes, createTemplate, updateTemplate, deleteTemplate } from '@/api/approve'
+import { getDeptList } from '@/api/user'
 
 const loading = ref(false)
 const saving = ref(false)
@@ -98,6 +105,13 @@ const templates = ref([])
 const nodesMap = ref({})
 const dialogVisible = ref(false)
 const editingId = ref(null)
+const deptOptions = ref([])
+
+function deptName(code) {
+  if (!code) return '通用部门'
+  const d = deptOptions.value.find(x => x.deptCode === code)
+  return d ? d.deptName : code
+}
 
 const form = reactive({ templateName: '', workType: '', deptCode: '', nodes: [] })
 
@@ -109,7 +123,14 @@ function addNode() {
   form.nodes.push({ nodeOrder: form.nodes.length + 1, nodeName: '', approverRole: 'APPROVER' })
 }
 
-onMounted(() => fetchList())
+onMounted(() => { fetchList(); fetchDepts() })
+
+async function fetchDepts() {
+  try {
+    const res = await getDeptList()
+    deptOptions.value = res.data || []
+  } catch {}
+}
 
 async function fetchList() {
   loading.value = true
@@ -190,20 +211,19 @@ async function handleDelete(row) {
 .tpl-list {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: $space-4;
 }
 
 .tpl-card {
-  background: #fff;
-  border: 1px solid #eef2f7;
-  border-radius: $border-radius;
-  padding: 20px 24px;
-  box-shadow: $shadow-card;
-  transition: all $transition-fast;
+  background: $bg-card;
+  border: 1px solid $border-light;
+  border-radius: $radius-lg;
+  padding: $space-5 $space-6;
+  transition: all $duration-fast $ease-in-out;
 
   &:hover {
-    border-color: rgba(79, 110, 247, 0.25);
-    box-shadow: 0 4px 16px rgba(79, 110, 247, 0.08);
+    border-color: $gray-300;
+    box-shadow: $shadow-sm;
   }
 
   &__header {
@@ -219,7 +239,7 @@ async function handleDelete(row) {
     gap: 10px;
 
     .tpl-name {
-      font-size: 15px;
+      font-size: $text-md;
       font-weight: 600;
       color: $text-primary;
     }
@@ -232,17 +252,17 @@ async function handleDelete(row) {
 
   &__footer {
     margin-top: 14px;
-    padding-top: 12px;
-    border-top: 1px dashed #f1f5f9;
+    padding-top: $space-3;
+    border-top: 1px dashed $border-light;
 
     .node-count {
       display: inline-flex;
       align-items: center;
       gap: 5px;
-      font-size: 12px;
+      font-size: $text-sm;
       color: $text-muted;
 
-      .el-icon { color: $primary-color; }
+      .el-icon { color: $brand; }
     }
   }
 }
@@ -250,36 +270,36 @@ async function handleDelete(row) {
 .tpl-flow {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-2;
   flex-wrap: wrap;
-  padding: 14px 16px;
-  background: #f8fafc;
-  border-radius: $border-radius-sm;
+  padding: 14px $space-4;
+  background: $gray-100;
+  border-radius: $radius-md;
 
   &__start,
   &__end {
     display: flex;
     align-items: center;
     gap: 5px;
-    font-size: 12px;
+    font-size: $text-sm;
     font-weight: 600;
     padding: 7px 12px;
-    border-radius: 20px;
+    border-radius: $radius-full;
     flex-shrink: 0;
   }
 
   &__start {
-    background: #eef2ff;
-    color: #4f6ef7;
+    background: $brand-light;
+    color: $brand;
   }
 
   &__end {
-    background: #ecfdf5;
-    color: #10b981;
+    background: $success-light;
+    color: $success;
   }
 
   &__arrow {
-    color: #cbd5e1;
+    color: $gray-400;
     font-size: 14px;
     flex-shrink: 0;
   }
@@ -287,39 +307,95 @@ async function handleDelete(row) {
   &__node {
     display: flex;
     align-items: center;
-    gap: 8px;
-    background: #fff;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
+    gap: $space-2;
+    background: $bg-card;
+    border: 1px solid $border-color;
+    border-radius: $radius-md;
     padding: 8px 12px;
     flex-shrink: 0;
 
     .node-badge {
-      font-size: 11px;
-      color: #4f6ef7;
-      background: #eef2ff;
+      font-size: $text-xs;
+      color: $brand;
+      background: $brand-light;
       padding: 1px 7px;
-      border-radius: 4px;
+      border-radius: $radius-xs;
       font-weight: 600;
     }
 
     .node-name {
-      font-size: 13px;
+      font-size: $text-base;
       font-weight: 600;
       color: $text-primary;
     }
 
     .node-role {
-      font-size: 12px;
+      font-size: $text-sm;
       color: $text-secondary;
     }
   }
 }
 
+.node-editor {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: $space-2;
+}
+
 .node-row {
   display: flex;
-  gap: 8px;
+  gap: $space-2;
   align-items: center;
-  margin-bottom: 8px;
+  padding: $space-2 $space-3;
+  background: $gray-100;
+  border: 1px solid $border-light;
+  border-radius: $radius-md;
+  transition: border-color $duration-fast $ease-in-out;
+
+  &:hover {
+    border-color: $gray-300;
+  }
+
+  .node-order {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: $brand;
+    color: #fff;
+    font-size: $text-sm;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .node-name-input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .node-role-select {
+    width: 130px;
+    flex-shrink: 0;
+  }
+
+  .node-del {
+    flex-shrink: 0;
+    padding: 4px;
+  }
+}
+
+.add-node-btn {
+  width: 100%;
+  border-style: dashed;
+}
+
+.node-row-legacy {
+  display: flex;
+  gap: $space-2;
+  align-items: center;
+  margin-bottom: $space-2;
 }
 </style>

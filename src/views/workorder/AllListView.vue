@@ -15,9 +15,6 @@
         <el-select v-model="query.type" placeholder="类型" clearable style="width: 130px" @change="resetAndFetch">
           <el-option v-for="(v, k) in ORDER_TYPE" :key="k" :label="v.label" :value="k" />
         </el-select>
-        <el-date-picker v-model="dateRange" type="daterange" range-separator="至"
-                        start-placeholder="开始日期" end-placeholder="结束日期" style="width: 240px"
-                        value-format="YYYY-MM-DD" @change="handleDateChange" />
         <el-button type="primary" :icon="Search" @click="fetchList">查询</el-button>
       </div>
 
@@ -91,8 +88,7 @@ const loading = ref(false)
 const exporting = ref(false)
 const tableData = ref([])
 const total = ref(0)
-const dateRange = ref(null)
-const query = reactive({ keyword: '', status: '', type: '', startDate: '', endDate: '', page: 1, pageSize: 10 })
+const query = reactive({ keyword: '', status: '', type: '', page: 1, pageSize: 10 })
 
 onMounted(() => fetchList())
 
@@ -112,18 +108,6 @@ async function fetchList() {
 }
 
 function resetAndFetch() {
-  query.page = 1
-  fetchList()
-}
-
-function handleDateChange(val) {
-  if (val) {
-    query.startDate = val[0]
-    query.endDate = val[1]
-  } else {
-    query.startDate = ''
-    query.endDate = ''
-  }
   query.page = 1
   fetchList()
 }
@@ -149,13 +133,6 @@ async function handleExport() {
 </script>
 
 <style lang="scss" scoped>
-.search-bar {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-}
-
 .order-cell {
   display: flex;
   flex-direction: column;
@@ -168,42 +145,37 @@ async function handleExport() {
     gap: 6px;
 
     .urgent-flag {
-      color: #ef4444;
+      color: $danger;
       font-size: 14px;
       flex-shrink: 0;
     }
 
     .title-text {
       font-weight: 600;
-      font-size: 14px;
+      font-size: $text-md;
       color: $text-primary;
       cursor: pointer;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
 
-      &:hover {
-        color: $primary-color;
-      }
+      &:hover { color: $brand; }
     }
 
-    .timeout-chip {
-      flex-shrink: 0;
-    }
+    .timeout-chip { flex-shrink: 0; }
   }
 
   &__no {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
+    font-family: $font-mono;
+    font-size: $text-sm;
     color: $text-muted;
   }
 }
 </style>
 
 <style lang="scss">
-/* 超时行高亮（需非 scoped 才能穿透 el-table 行） */
 .el-table .timeout-row > td.el-table__cell {
-  background-color: #fef2f2 !important;
+  background-color: #{$danger-light} !important;
 }
 .el-table .timeout-row:hover > td.el-table__cell {
   background-color: #fee2e2 !important;

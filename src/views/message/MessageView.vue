@@ -18,8 +18,11 @@
         <el-tab-pane label="全部消息" name="ALL" />
         <el-tab-pane label="审批通知" name="APPROVE_NOTIFY" />
         <el-tab-pane label="驳回通知" name="REJECT_NOTIFY" />
+        <el-tab-pane label="转交通知" name="TRANSFER_NOTIFY" />
+        <el-tab-pane label="超时督办" name="DELAY_REMIND" />
         <el-tab-pane label="超时提醒" name="TIMEOUT_NOTIFY" />
         <el-tab-pane label="催办通知" name="URGE_NOTIFY" />
+        <el-tab-pane label="升级通知" name="ESCALATION" />
         <el-tab-pane label="系统通知" name="SYSTEM" />
       </el-tabs>
 
@@ -186,7 +189,7 @@ async function handleDelete(msg) {
   position: relative;
 
   .unread-badge {
-    margin-left: 8px;
+    margin-left: $space-2;
   }
 }
 
@@ -202,11 +205,11 @@ async function handleDelete(msg) {
 .group-divider {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: $space-3;
   margin: 18px 0 6px;
 
   &:first-child {
-    margin-top: 4px;
+    margin-top: $space-1;
   }
 
   &::before,
@@ -214,11 +217,11 @@ async function handleDelete(msg) {
     content: '';
     flex: 1;
     height: 1px;
-    background: #f1f5f9;
+    background: $border-light;
   }
 
   .group-label {
-    font-size: 12px;
+    font-size: $text-sm;
     font-weight: 600;
     color: $text-muted;
     letter-spacing: 1px;
@@ -229,13 +232,19 @@ async function handleDelete(msg) {
   display: flex;
   align-items: flex-start;
   gap: 14px;
-  padding: 14px 16px;
-  border-radius: 8px;
+  padding: 14px $space-4;
+  border-radius: $radius-md;
+  border: 1px solid transparent;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all $duration-fast $ease-in-out;
+
+  & + .message-item {
+    margin-top: 2px;
+  }
 
   &:hover {
-    background: #f8fafc;
+    background: $bg-hover;
+    border-color: $border-light;
 
     .delete-btn {
       opacity: 1;
@@ -243,10 +252,11 @@ async function handleDelete(msg) {
   }
 
   &.unread {
-    background: #f0f7ff;
+    background: $brand-light;
+    border-color: rgba(37, 99, 235, 0.16);
 
     &:hover {
-      background: #e6f0ff;
+      background: $brand-subtle;
     }
 
     .msg-name {
@@ -255,13 +265,14 @@ async function handleDelete(msg) {
   }
 
   .msg-icon {
-    width: 36px;
-    height: 36px;
-    border-radius: 10px;
+    width: 38px;
+    height: 38px;
+    border-radius: $radius-md;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
+    box-shadow: $shadow-xs;
   }
 
   .msg-content {
@@ -271,27 +282,28 @@ async function handleDelete(msg) {
     .msg-title {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 4px;
+      gap: $space-2;
+      margin-bottom: $space-1;
 
       .msg-name {
-        font-size: 14px;
-        color: #1e293b;
+        font-size: $text-md;
+        color: $text-primary;
       }
 
       .unread-dot {
-        width: 8px;
-        height: 8px;
+        width: 7px;
+        height: 7px;
         border-radius: 50%;
-        background: #4f6ef7;
+        background: $brand;
         flex-shrink: 0;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
       }
     }
 
     .msg-text {
-      font-size: 13px;
-      color: #64748b;
-      line-height: 1.5;
+      font-size: $text-base;
+      color: $text-secondary;
+      line-height: $leading-normal;
       margin: 0 0 6px;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -299,20 +311,20 @@ async function handleDelete(msg) {
     }
 
     .msg-time {
-      font-size: 12px;
-      color: #94a3b8;
+      font-size: $text-sm;
+      color: $text-muted;
     }
   }
 
   .msg-actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: $space-2;
     flex-shrink: 0;
 
     .delete-btn {
       opacity: 0;
-      transition: opacity 0.2s;
+      transition: opacity $duration-fast;
     }
   }
 }

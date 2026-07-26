@@ -15,6 +15,11 @@ export function getApprovalDetail(id) {
   return request.get(`/api/v1/approve/${id}`)
 }
 
+// 按工单ID查询完整审批记录（含审批人/节点状态/序号，工单详情审批流真实数据源）
+export function getApprovalRecordsByWorkOrder(workOrderId) {
+  return request.get(`/api/v1/approve/by-work-order/${workOrderId}/records`)
+}
+
 // 审批通过
 export function approveOrder(id, data) {
   return request.post(`/api/v1/approve/${id}/approve`, data)

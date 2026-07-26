@@ -1,8 +1,8 @@
 <template>
   <el-timeline>
     <el-timeline-item
-      v-for="item in history"
-      :key="item.id"
+      v-for="(item, idx) in history"
+      :key="idx"
       :timestamp="formatDate(item.createdAt)"
       placement="top"
       :type="getType(item.toStatus || item.status)"

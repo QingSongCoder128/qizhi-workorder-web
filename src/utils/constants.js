@@ -15,18 +15,21 @@ export const ORDER_STATUS = {
 }
 
 // 工单类型（SRS 3.2.1：运维报修、行政采购、人事请假、技术需求）
+// 兼容历史/AI 数据中的 IT_SUPPORT / ADMIN_AFFAIR 编码
 export const ORDER_TYPE = {
   OPS_REPAIR: { label: '运维报修', icon: 'SetUp', color: '#f59e0b' },
   ADMIN_PURCHASE: { label: '行政采购', icon: 'ShoppingCart', color: '#8b5cf6' },
   HR_LEAVE: { label: '人事请假', icon: 'Calendar', color: '#10b981' },
-  TECH_REQUEST: { label: '技术需求', icon: 'Monitor', color: '#3b82f6' }
+  TECH_REQUEST: { label: '技术需求', icon: 'Monitor', color: '#3b82f6' },
+  IT_SUPPORT: { label: 'IT支持', icon: 'Cpu', color: '#3b82f6' },
+  ADMIN_AFFAIR: { label: '行政事务', icon: 'Briefcase', color: '#8b5cf6' }
 }
 
 // 优先级
 export const PRIORITY = {
   URGENT: { label: '紧急', color: '#ef4444', type: 'danger' },
-  NORMAL: { label: '普通', color: '#64748b', type: 'info' },
-  LOW: { label: '低优先级', color: '#6b9080', type: 'info' }
+  NORMAL: { label: '正常', color: '#64748b', type: 'info' },
+  LOW: { label: '低', color: '#94a3b8', type: 'info' }
 }
 
 // 用户角色
@@ -78,11 +81,12 @@ export const USER_STATUS = {
   INACTIVE: { label: '已停用', color: '#94a3b8', tag: 'info' }
 }
 
-// 死信状态（与数据库 dead_letter.status 实际值对齐：UNRESOLVED/RESOLVED/FAILED）
+// 死信状态（与数据库 dead_letter.status 实际值对齐：UNRESOLVED/RESOLVED/FAILED/MANUAL）
 export const DLQ_STATUS = {
   UNRESOLVED: { label: '待处理', color: '#f59e0b', tag: 'warning' },
   RESOLVED: { label: '已处理', color: '#10b981', tag: 'success' },
-  FAILED: { label: '处理失败', color: '#ef4444', tag: 'danger' }
+  FAILED: { label: '处理失败', color: '#ef4444', tag: 'danger' },
+  MANUAL: { label: '需人工介入', color: '#ef4444', tag: 'danger' }
 }
 
 // AI 状态

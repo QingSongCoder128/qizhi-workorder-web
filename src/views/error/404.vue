@@ -25,42 +25,42 @@ import { DocumentRemove } from '@element-plus/icons-vue'
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8fafc;
+  background: $bg-page;
 }
 
 .error-content {
   text-align: center;
-  padding: 40px;
+  padding: $space-10;
 
   .error-code {
     font-size: 120px;
     font-weight: 800;
-    color: #e2e8f0;
+    color: $gray-200;
     line-height: 1;
     letter-spacing: -4px;
   }
 
   .error-icon {
-    margin: -20px 0 20px;
-    color: #6366f1;
+    margin: -20px 0 $space-5;
+    color: $brand;
   }
 
   h2 {
-    font-size: 22px;
+    font-size: $text-xl;
     font-weight: 600;
-    color: #1e293b;
-    margin-bottom: 10px;
+    color: $text-primary;
+    margin-bottom: $space-3;
   }
 
   p {
-    font-size: 14px;
-    color: #64748b;
-    margin-bottom: 32px;
+    font-size: $text-md;
+    color: $text-secondary;
+    margin-bottom: $space-8;
   }
 
   .error-actions {
     display: flex;
-    gap: 12px;
+    gap: $space-3;
     justify-content: center;
   }
 }

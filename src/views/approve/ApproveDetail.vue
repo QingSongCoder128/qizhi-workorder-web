@@ -18,7 +18,7 @@
             </div>
             <div class="banner-meta">
               <span class="mono-text">{{ detail.orderNo }}</span>
-              <span><el-icon><User /></el-icon>{{ detail.submitterName }}</span>
+              <span><el-icon><User /></el-icon>{{ submitterInfo.realName || detail.submitterName }}</span>
               <span><el-icon><Clock /></el-icon>{{ formatDate(detail.createdAt) }}</span>
               <span v-if="detail.type"><el-icon><Folder /></el-icon>{{ ORDER_TYPE[detail.type]?.label || detail.type }}</span>
             </div>
@@ -41,7 +41,14 @@
               <el-descriptions-item label="标题">
                 <span class="order-title">{{ detail.title }}</span>
               </el-descriptions-item>
-              <el-descriptions-item label="提交人">{{ detail.submitterName }}</el-descriptions-item>
+              <el-descriptions-item label="提交人">
+                <div class="submitter-cell">
+                  <span class="submitter-name">{{ submitterInfo.realName || detail.submitterName }}</span>
+                  <span v-if="submitterInfo.phone || submitterInfo.email" class="submitter-contact">
+                    {{ submitterInfo.phone }}<template v-if="submitterInfo.phone && submitterInfo.email"> · </template>{{ submitterInfo.email }}
+                  </span>
+                </div>
+              </el-descriptions-item>
               <el-descriptions-item label="工单类型">
                 <el-tag size="small" effect="plain">{{ ORDER_TYPE[detail.type]?.label || detail.type || '-' }}</el-tag>
               </el-descriptions-item>
@@ -62,8 +69,9 @@
             </div>
             <div class="ai-grid">
               <div class="ai-item">
-                <span class="ai-label">智能分类</span>
+                <span class="ai-label">AI 分派至</span>
                 <span class="ai-value ai-highlight">{{ AI_CATEGORY[detail.aiCategory] || detail.aiCategory || '待分析' }}</span>
+                <span class="ai-note">AI 识别的处理部门/类别</span>
               </div>
               <div class="ai-item">
                 <span class="ai-label">分类置信度</span>
@@ -74,15 +82,20 @@
               </div>
               <div class="ai-item">
                 <span class="ai-label">优先级判定</span>
-                <span class="ai-value">{{ detail.aiPriorityReason || '-' }}</span>
+                <div class="ai-priority">
+                  <PriorityTag v-if="detail.priority" :priority="detail.priority" />
+                  <span v-else class="ai-value">正常</span>
+                </div>
+                <span class="ai-note" v-if="detail.aiPriorityReason">判定依据：{{ detail.aiPriorityReason }}</span>
               </div>
               <div class="ai-item" v-if="detail.aiSuggestion">
                 <span class="ai-label">预审建议</span>
                 <span class="ai-value">{{ detail.aiSuggestion }}</span>
               </div>
-              <div class="ai-item" v-if="detail.aiSensitiveWords">
-                <span class="ai-label">敏感词检测</span>
-                <el-tag type="danger" size="small">{{ detail.aiSensitiveWords }}</el-tag>
+              <div class="ai-item">
+                <span class="ai-label">敏感内容检测</span>
+                <el-tag v-if="detail.aiSensitiveWords" type="danger" size="small">{{ detail.aiSensitiveWords }}</el-tag>
+                <span v-else class="ai-safe-text">未检测到敏感内容</span>
               </div>
             </div>
           </div>
@@ -230,7 +243,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft, User, Clock, Folder, Bell } from '@element-plus/icons-vue'
 import { getApprovalDetail, approveOrder, rejectOrder, transferOrder, addApprovalNode, removeApprovalNode } from '@/api/approve'
-import { getUsersByRole } from '@/api/user'
+import { getUsersByRole, getUserList } from '@/api/user'
+import { useUserStore } from '@/store/user'
 import { ORDER_STATUS, ORDER_TYPE, AI_CATEGORY } from '@/utils/constants'
 import { formatDate } from '@/utils/format'
 import PriorityTag from '@/components/PriorityTag.vue'
@@ -238,10 +252,12 @@ import ApprovalTimeline from '@/components/ApprovalTimeline.vue'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 const loading = ref(false)
 const submitting = ref(false)
 const detail = ref({})
 const approvalNodes = ref([])
+const submitterInfo = ref({})
 const comment = ref('')
 const approverList = ref([])
 
@@ -278,6 +294,14 @@ onMounted(async () => {
     const res = await getApprovalDetail(route.params.id)
     detail.value = res.data?.workOrder || {}
     approvalNodes.value = res.data?.nodes || []
+    // 提交人：按账号名查用户服务获取真实姓名与联系方式（仅管理员可查，非管理员自动降级为账号名）
+    if (detail.value.submitterName && userStore.role === 'ADMIN') {
+      try {
+        const uRes = await getUserList({ keyword: detail.value.submitterName, page: 1, pageSize: 50 })
+        const matched = (uRes.data?.records || []).find(u => u.username === detail.value.submitterName)
+        if (matched) submitterInfo.value = matched
+      } catch {}
+    }
   } catch {} finally { loading.value = false }
   // 加载审批人列表
   try {
@@ -413,39 +437,37 @@ async function handleRemoveNode() {
   // 顶部横幅
   .detail-banner {
     position: relative;
-    border-radius: 12px;
+    border-radius: $radius-lg;
     overflow: hidden;
-    margin-bottom: 20px;
-    background: #fff;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    margin-bottom: $page-gap;
+    background: $bg-card;
+    border: 1px solid $border-light;
 
     .banner-bg {
       height: 72px;
-      background: linear-gradient(135deg, #4f6ef7 0%, #7c3aed 100%);
+      background: $gray-950;
     }
 
     .banner-body {
-      padding: 0 24px 18px;
+      padding: 0 $space-6 18px;
       margin-top: -32px;
       position: relative;
 
       .banner-left {
         display: flex;
         align-items: flex-end;
-        gap: 16px;
+        gap: $space-4;
 
         .back-btn {
           width: 40px;
           height: 40px;
           background: #fff;
           border: none;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+          box-shadow: $shadow-md;
           font-size: 16px;
           flex-shrink: 0;
 
-          &:hover {
-            color: #4f6ef7;
-          }
+          &:hover { color: $brand; }
         }
 
         .banner-info {
@@ -453,20 +475,20 @@ async function handleRemoveNode() {
           min-width: 0;
 
           .banner-title {
-            font-size: 18px;
+            font-size: $text-xl;
             font-weight: 700;
-            color: #1e293b;
+            color: $text-primary;
             display: flex;
             align-items: center;
             gap: 10px;
-            margin-bottom: 8px;
+            margin-bottom: $space-2;
           }
 
           .banner-meta {
             display: flex;
-            gap: 20px;
-            font-size: 13px;
-            color: #64748b;
+            gap: $space-5;
+            font-size: $text-base;
+            color: $text-secondary;
             flex-wrap: wrap;
 
             span {
@@ -475,7 +497,7 @@ async function handleRemoveNode() {
               gap: 5px;
 
               .el-icon {
-                color: #4f6ef7;
+                color: $brand;
                 font-size: 14px;
               }
             }
@@ -487,45 +509,62 @@ async function handleRemoveNode() {
 
   // 通用卡片
   .section-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 22px 24px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-    margin-bottom: 20px;
+    background: $bg-card;
+    border-radius: $radius-lg;
+    padding: $space-5 $space-6;
+    border: 1px solid $border-light;
+    margin-bottom: $page-gap;
   }
 
   .section-title {
-    font-size: 15px;
+    font-size: $text-md;
     font-weight: 600;
-    color: #1e293b;
-    margin-bottom: 16px;
+    color: $text-primary;
+    margin-bottom: $space-4;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: $space-2;
 
-    .el-icon { color: #4f6ef7; }
+    .el-icon { color: $brand; }
   }
 
   .mono-text {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
-    color: #64748b;
+    font-family: $font-mono;
+    font-size: $text-base;
+    color: $text-secondary;
   }
 
   .order-title {
     font-weight: 600;
-    font-size: 14px;
+    font-size: $text-md;
   }
 
   .order-detail-text {
-    line-height: 1.7;
+    line-height: $leading-relaxed;
     white-space: pre-wrap;
-    color: #64748b;
+    color: $text-secondary;
+  }
+
+.submitter-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    .submitter-name {
+      font-weight: 600;
+      color: $text-primary;
+    }
+
+    .submitter-contact {
+      font-size: $text-sm;
+      color: $text-muted;
+      font-variant-numeric: tabular-nums;
+    }
   }
 
   // AI 分析区域
   .ai-section {
-    background: linear-gradient(135deg, #faf5ff 0%, #f0f0ff 100%);
+    background: $info-light;
     border: 1px solid rgba(99, 102, 241, 0.12);
   }
 
@@ -533,8 +572,8 @@ async function handleRemoveNode() {
     .ai-title-icon {
       width: 28px;
       height: 28px;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      border-radius: $radius-md;
+      background: $info;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -553,34 +592,50 @@ async function handleRemoveNode() {
       gap: 6px;
 
       .ai-label {
-        font-size: 12px;
-        color: #94a3b8;
+        font-size: $text-sm;
+        color: $text-muted;
         font-weight: 500;
       }
 
       .ai-value {
-        font-size: 13px;
-        color: #1e293b;
-        line-height: 1.5;
+        font-size: $text-base;
+        color: $text-primary;
+        line-height: $leading-normal;
       }
 
       .ai-highlight {
         font-weight: 600;
-        color: #6366f1;
-        font-size: 14px;
+        color: $info;
+        font-size: $text-md;
       }
 
       .confidence-bar {
         width: 100%;
         max-width: 200px;
       }
+
+      .ai-priority {
+        display: flex;
+        align-items: center;
+      }
+
+      .ai-note {
+        font-size: $text-xs;
+        color: $text-muted;
+        line-height: $leading-normal;
+      }
+
+      .ai-safe-text {
+        font-size: $text-sm;
+        color: $success;
+      }
     }
   }
 
   // 审批操作区域
   .action-section {
-    border: 1px solid rgba(79, 110, 247, 0.15);
-    background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
+    border: 1px solid $brand-subtle;
+    background: $brand-light;
   }
 
   .action-btns {
@@ -592,25 +647,24 @@ async function handleRemoveNode() {
     .action-btn {
       min-width: 100px;
       font-weight: 500;
-      border-radius: 8px;
+      border-radius: $radius-md;
     }
 
     .action-btn--main {
       min-width: 130px;
       font-weight: 600;
       letter-spacing: 1px;
-      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
     }
 
     .action-btn--more {
-      color: #64748b;
+      color: $text-secondary;
     }
   }
 
   .action-tips {
-    margin-top: 12px;
-    font-size: 12px;
-    color: #94a3b8;
+    margin-top: $space-3;
+    font-size: $text-sm;
+    color: $text-muted;
     display: flex;
     align-items: center;
     gap: 4px;
@@ -620,10 +674,10 @@ async function handleRemoveNode() {
 
   // 审批须知
   .notice-card {
-    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
-    border: 1px solid rgba(245, 158, 11, 0.15);
+    background: $warning-light;
+    border: 1px solid rgba(217, 119, 6, 0.15);
 
-    .section-title .el-icon { color: #f59e0b; }
+    .section-title .el-icon { color: $warning; }
 
     .notice-list {
       margin: 0;
@@ -633,9 +687,9 @@ async function handleRemoveNode() {
       li {
         position: relative;
         padding: 8px 0 8px 18px;
-        font-size: 13px;
+        font-size: $text-base;
         color: #78350f;
-        line-height: 1.6;
+        line-height: $leading-relaxed;
 
         &::before {
           content: '';
@@ -645,11 +699,11 @@ async function handleRemoveNode() {
           width: 6px;
           height: 6px;
           border-radius: 50%;
-          background: #f59e0b;
+          background: $warning;
         }
 
         & + li {
-          border-top: 1px dashed rgba(245, 158, 11, 0.2);
+          border-top: 1px dashed rgba(217, 119, 6, 0.2);
         }
       }
     }

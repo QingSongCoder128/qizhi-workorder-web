@@ -54,9 +54,11 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="aiCategory" label="AI分类" width="100">
+        <el-table-column prop="aiCategory" label="AI分派" width="100">
           <template #default="{ row }">
-            <span class="ai-tag" v-if="row.aiCategory">{{ AI_CATEGORY[row.aiCategory] || row.aiCategory }}</span>
+            <el-tooltip v-if="row.aiCategory" content="AI 智能识别的处理部门/类别" placement="top">
+              <span class="ai-tag">{{ AI_CATEGORY[row.aiCategory] || row.aiCategory }}</span>
+            </el-tooltip>
             <span v-else class="text-muted">-</span>
           </template>
         </el-table-column>
@@ -201,40 +203,42 @@ async function doResubmit() {
 <style scoped lang="scss">
 .status-tabs {
   display: flex;
-  gap: 8px;
-  margin-bottom: 16px;
+  gap: $space-2;
+  margin-bottom: $space-4;
   flex-wrap: wrap;
 
   .tab-item {
     padding: 6px 16px;
-    border-radius: 20px;
-    font-size: 13px;
+    border-radius: $radius-full;
+    font-size: $text-base;
     color: $text-secondary;
-    background: $card-bg;
-    border: 1px solid #e2e8f0;
+    background: $bg-card;
+    border: 1px solid $border-color;
     cursor: pointer;
-    transition: all $transition-fast;
+    transition: all $duration-fast $ease-in-out;
     display: flex;
     align-items: center;
     gap: 6px;
+    font-weight: 500;
 
-    &:hover { border-color: $primary-color; color: $primary-color; }
+    &:hover { border-color: $brand; color: $brand; }
 
     &.active {
-      background: $primary-color;
+      background: $brand;
       color: #fff;
-      border-color: $primary-color;
+      border-color: $brand;
     }
 
     .tab-count {
-      font-size: 11px;
-      background: rgba(0,0,0,0.08);
+      font-size: $text-xs;
+      background: rgba(0,0,0,0.06);
       padding: 1px 6px;
-      border-radius: 10px;
+      border-radius: $radius-full;
+      font-variant-numeric: tabular-nums;
     }
 
     &.active .tab-count {
-      background: rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.2);
     }
   }
 }
@@ -244,8 +248,8 @@ async function doResubmit() {
 }
 
 .order-no {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
+  font-family: $font-mono;
+  font-size: $text-sm;
   color: $text-secondary;
 }
 
@@ -255,27 +259,28 @@ async function doResubmit() {
   gap: 6px;
 
   .urgent-icon {
-    color: $danger;
+    color: $warning;
     font-size: 14px;
     flex-shrink: 0;
   }
 }
 
 .ai-tag {
-  font-size: 12px;
-  color: $primary-color;
-  background: $primary-light;
+  font-size: $text-sm;
+  color: $brand;
+  background: $brand-light;
   padding: 2px 8px;
-  border-radius: 4px;
+  border-radius: $radius-xs;
+  font-weight: 500;
 }
 
 .text-muted {
   color: $text-muted;
-  font-size: 12px;
+  font-size: $text-sm;
 }
 
 :deep(.urgent-row) {
   td { border-left: 2px solid transparent; }
-  td:first-child { border-left: 2px solid $danger; }
+  td:first-child { border-left: 2px solid $warning; }
 }
 </style>

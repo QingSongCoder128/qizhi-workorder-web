@@ -25,7 +25,7 @@
           <el-col :span="12">
             <el-form-item label="所属部门" prop="departmentCode">
               <el-select v-model="form.departmentCode" placeholder="请选择部门" style="width: 100%">
-                <el-option v-for="(v, k) in DEPT_MAP" :key="k" :label="v" :value="k" />
+                <el-option v-for="d in deptOptions" :key="d.deptCode" :label="d.deptName" :value="d.deptCode" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -77,12 +77,13 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Plus, UploadFilled, Promotion } from '@element-plus/icons-vue'
-import { ORDER_TYPE, DEPT_MAP } from '@/utils/constants'
+import { ORDER_TYPE } from '@/utils/constants'
 import { submitWorkOrder } from '@/api/workOrder'
+import { getDeptList } from '@/api/user'
 import { getSessionId } from '@/utils/auth'
 
 const router = useRouter()
@@ -90,6 +91,15 @@ const formRef = ref()
 const submitting = ref(false)
 const fileList = ref([])
 const attachments = ref([])
+const deptOptions = ref([])
+
+// 部门下拉动态获取（SRS 场景二：关联部门下拉列表从 user-service 获取）
+onMounted(async () => {
+  try {
+    const res = await getDeptList()
+    deptOptions.value = (res.data || []).filter(d => d.status !== 'DISABLED')
+  } catch {}
+})
 
 const uploadHeaders = computed(() => ({
   'X-Session-Id': getSessionId()
@@ -157,22 +167,22 @@ function handleReset() {
 .urgent-switch {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: $space-3;
 
   .urgent-hint {
-    font-size: 12px;
-    color: #ef4444;
+    font-size: $text-sm;
+    color: $danger;
   }
 }
 
 .submit-area {
   display: flex;
-  gap: 12px;
+  gap: $space-3;
 }
 
 :deep(.el-upload-dragger) {
-  padding: 24px;
-  border-radius: 8px;
+  padding: $space-6;
+  border-radius: $radius-md;
 }
 
 :deep(.el-upload) {

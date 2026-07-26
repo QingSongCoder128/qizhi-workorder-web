@@ -20,7 +20,7 @@
       <el-table :data="tableData" v-loading="loading" empty-text=" ">
         <el-table-column prop="username" label="账号" width="130">
           <template #default="{ row }">
-            <span style="font-family: monospace; font-size: 13px;">{{ row.username }}</span>
+            <span style="font-family: var(--font-mono, monospace); font-size: 13px;">{{ row.username }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="realName" label="姓名" width="100" />
@@ -34,12 +34,12 @@
         </el-table-column>
         <el-table-column prop="phone" label="手机号" width="130">
           <template #default="{ row }">
-            <span class="masked-text">{{ maskPhone(row.phone) }}</span>
+            <span class="contact-text">{{ row.phone || '—' }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="email" label="邮箱" min-width="160" show-overflow-tooltip>
           <template #default="{ row }">
-            <span class="masked-text">{{ maskEmail(row.email) }}</span>
+            <span class="contact-text">{{ row.email || '—' }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="status" label="状态" width="80">
@@ -127,26 +127,6 @@ const ROLE_MAP = {
 function roleColor(code) { return ROLE_MAP[code]?.color || '#64748b' }
 function roleLabel(code) { return ROLE_MAP[code]?.label || code }
 
-// 手机号脱敏：138****1234
-function maskPhone(phone) {
-  if (!phone) return '—'
-  const s = String(phone)
-  if (s.length < 7) return s
-  return s.replace(/^(\d{3})\d{4}(\d{4})$/, '$1****$2')
-}
-
-// 邮箱脱敏：zh***@qizhi.com
-function maskEmail(email) {
-  if (!email) return '—'
-  const s = String(email)
-  const at = s.indexOf('@')
-  if (at <= 0) return s
-  const name = s.slice(0, at)
-  const domain = s.slice(at)
-  const kept = name.slice(0, 2)
-  return `${kept}${'*'.repeat(Math.max(name.length - 2, 1))}${domain}`
-}
-
 function handleMoreCommand(command, row) {
   if (command === 'reset') handleReset(row)
   else if (command === 'disable' || command === 'enable') handleToggle(row)
@@ -221,10 +201,10 @@ async function handleToggle(row) {
 </script>
 
 <style lang="scss" scoped>
-.masked-text {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  color: $text-secondary;
+.contact-text {
+  font-family: $font-mono;
+  font-size: $text-base;
+  color: $text-primary;
   letter-spacing: 0.3px;
 }
 </style>

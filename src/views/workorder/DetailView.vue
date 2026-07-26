@@ -43,7 +43,14 @@
               <el-descriptions-item label="优先级">
                 <PriorityTag v-if="detail.priority" :priority="detail.priority" />
               </el-descriptions-item>
-              <el-descriptions-item label="提交人">{{ detail.submitterName }}</el-descriptions-item>
+              <el-descriptions-item label="提交人">
+                <div class="submitter-cell">
+                  <span class="submitter-name">{{ submitterInfo.realName || detail.submitterName }}</span>
+                  <span v-if="submitterInfo.phone || submitterInfo.email" class="submitter-contact">
+                    {{ submitterInfo.phone }}<template v-if="submitterInfo.phone && submitterInfo.email"> · </template>{{ submitterInfo.email }}
+                  </span>
+                </div>
+              </el-descriptions-item>
               <el-descriptions-item label="关联部门">{{ DEPT_MAP[detail.departmentCode] || detail.deptName || '—' }}</el-descriptions-item>
               <el-descriptions-item label="提交时间">{{ formatDate(detail.createdAt) }}</el-descriptions-item>
               <el-descriptions-item label="详情描述" :span="2">
@@ -89,8 +96,9 @@
             </div>
             <div class="ai-grid">
               <div class="ai-item">
-                <span class="ai-label">智能分类</span>
+                <span class="ai-label">AI 分派至</span>
                 <span class="ai-value ai-highlight">{{ AI_CATEGORY[detail.aiCategory] || detail.aiCategory || '待分析' }}</span>
+                <span class="ai-note">AI 识别的处理部门/类别</span>
               </div>
               <div class="ai-item">
                 <span class="ai-label">分类置信度</span>
@@ -101,14 +109,18 @@
               </div>
               <div class="ai-item">
                 <span class="ai-label">优先级判定</span>
-                <span class="ai-value">{{ safeText(detail.aiPriorityReason) }}</span>
+                <div class="ai-priority">
+                  <PriorityTag v-if="detail.priority" :priority="detail.priority" />
+                  <span v-else class="ai-value">正常</span>
+                </div>
+                <span class="ai-note" v-if="detail.aiPriorityReason">判定依据：{{ detail.aiPriorityReason }}</span>
               </div>
               <div class="ai-item">
                 <span class="ai-label">预审建议</span>
                 <span class="ai-value">{{ safeText(detail.aiSuggestion) }}</span>
               </div>
               <div class="ai-item">
-                <span class="ai-label">敏感词检测</span>
+                <span class="ai-label">敏感内容检测</span>
                 <el-tag v-if="detail.aiSensitiveWords" type="danger" size="small">{{ detail.aiSensitiveWords }}</el-tag>
                 <span v-else class="ai-safe-text">未检测到敏感内容</span>
               </div>
@@ -127,6 +139,11 @@
           <!-- 审批流转 -->
           <div v-if="approvalNodes.length" class="page-card section-card">
             <div class="section-title"><el-icon><Stamp /></el-icon> 审批流程</div>
+            <div v-if="currentApproverName" class="current-approver">
+              <el-icon><User /></el-icon>
+              <span>当前审批人：<b>{{ currentApproverName }}</b></span>
+              <span v-if="currentApprovalNode?.nodeName" class="current-node">（{{ currentApprovalNode.nodeName }}）</span>
+            </div>
             <ApprovalTimeline :nodes="approvalNodes" />
           </div>
 
@@ -164,9 +181,12 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Edit, MagicStick, Stamp, CircleCheck, WarningFilled, RefreshRight, RemoveFilled } from '@element-plus/icons-vue'
+import { Edit, MagicStick, Stamp, CircleCheck, WarningFilled, RefreshRight, RemoveFilled, User } from '@element-plus/icons-vue'
 import { ORDER_STATUS, ORDER_TYPE, AI_CATEGORY, DEPT_MAP, safeText, emptyHint, formatConfidence } from '@/utils/constants'
 import { getWorkOrderDetail, resubmitWorkOrder, revokeWorkOrder } from '@/api/workOrder'
+import { getApprovalRecordsByWorkOrder } from '@/api/approve'
+import { getUserList } from '@/api/user'
+import { useUserStore } from '@/store/user'
 import { formatDate } from '@/utils/format'
 import StatusTag from '@/components/StatusTag.vue'
 import PriorityTag from '@/components/PriorityTag.vue'
@@ -175,10 +195,12 @@ import WorkOrderTimeline from '@/components/WorkOrderTimeline.vue'
 
 const route = useRoute()
 const router = useRouter()
+const userStore = useUserStore()
 const loading = ref(false)
 const detail = ref({})
 const approvalNodes = ref([])
 const statusHistory = ref([])
+const submitterInfo = ref({})
 
 const resubmitVisible = ref(false)
 const resubmitting = ref(false)
@@ -206,13 +228,35 @@ const rejectReason = computed(() => {
   return rejected?.opinion || ''
 })
 
+// 当前审批节点与审批人（审批流中第一个 PENDING/APPROVING 节点）
+const currentApprovalNode = computed(() =>
+  approvalNodes.value.find(n => n.status === 'PENDING' || n.status === 'APPROVING')
+)
+const currentApproverName = computed(() =>
+  currentApprovalNode.value?.approverName || detail.value.currentApproverName || ''
+)
+
 onMounted(async () => {
   loading.value = true
   try {
     const res = await getWorkOrderDetail(route.params.id)
     detail.value = res.data || {}
-    approvalNodes.value = res.data?.approvalNodes || []
     statusHistory.value = res.data?.statusHistory || []
+    // 提交人：按账号名查用户服务获取真实姓名与联系方式（仅管理员可查，非管理员自动降级为账号名）
+    if (detail.value.submitterName && userStore.role === 'ADMIN') {
+      try {
+        const uRes = await getUserList({ keyword: detail.value.submitterName, page: 1, pageSize: 50 })
+        const matched = (uRes.data?.records || []).find(u => u.username === detail.value.submitterName)
+        if (matched) submitterInfo.value = matched
+      } catch {}
+    }
+    // 审批流：直连审批服务获取完整审批记录（含审批人、节点状态、序号）
+    try {
+      const recRes = await getApprovalRecordsByWorkOrder(route.params.id)
+      approvalNodes.value = recRes.data || []
+    } catch {
+      approvalNodes.value = res.data?.approvalNodes || []
+    }
   } catch {} finally {
     loading.value = false
   }
@@ -262,7 +306,7 @@ async function handleRevoke() {
 }
 
 .detail-header-title {
-  font-size: 16px;
+  font-size: $text-lg;
   font-weight: 600;
   max-width: 480px;
   overflow: hidden;
@@ -271,35 +315,35 @@ async function handleRevoke() {
 }
 
 .steps-card {
-  margin-bottom: 20px;
+  margin-bottom: $page-gap;
   padding: 28px 40px;
 }
 
 .section-card {
-  margin-bottom: 20px;
+  margin-bottom: $page-gap;
 }
 
 .section-title {
-  font-size: 15px;
+  font-size: $text-md;
   font-weight: 600;
   color: $text-primary;
-  margin-bottom: 16px;
+  margin-bottom: $space-4;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-2;
 
-  .el-icon { color: $primary-color; }
+  .el-icon { color: $brand; }
 }
 
 .mono-text {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
+  font-family: $font-mono;
+  font-size: $text-base;
   color: $text-secondary;
 }
 
 .detail-title {
   font-weight: 600;
-  font-size: 14px;
+  font-size: $text-md;
 }
 
 .urgent-badge {
@@ -309,38 +353,38 @@ async function handleRevoke() {
 }
 
 .detail-content {
-  line-height: 1.7;
+  line-height: $leading-relaxed;
   color: $text-secondary;
   white-space: pre-wrap;
 }
 
 .attachment-section {
-  margin-top: 16px;
+  margin-top: $space-4;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: $space-2;
 
   .attach-label {
-    font-size: 13px;
+    font-size: $text-base;
     color: $text-secondary;
   }
 
   .attach-img {
     width: 72px;
     height: 72px;
-    border-radius: 8px;
-    border: 1px solid #e2e8f0;
+    border-radius: $radius-md;
+    border: 1px solid $border-color;
   }
 }
 
 .reject-section {
-  margin-top: 20px;
-  padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
+  margin-top: $page-gap;
+  padding-top: $space-4;
+  border-top: 1px solid $border-light;
 }
 
 .ai-section {
-  background: linear-gradient(135deg, #faf5ff 0%, #f0f0ff 100%);
+  background: $info-light;
   border: 1px solid rgba(99, 102, 241, 0.12);
 }
 
@@ -348,8 +392,8 @@ async function handleRevoke() {
   .ai-title-icon {
     width: 28px;
     height: 28px;
-    border-radius: 8px;
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    border-radius: $radius-md;
+    background: $info;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -368,21 +412,21 @@ async function handleRevoke() {
     gap: 6px;
 
     .ai-label {
-      font-size: 12px;
+      font-size: $text-sm;
       color: $text-muted;
       font-weight: 500;
     }
 
     .ai-value {
-      font-size: 13px;
+      font-size: $text-base;
       color: $text-primary;
-      line-height: 1.5;
+      line-height: $leading-normal;
     }
 
     .ai-highlight {
       font-weight: 600;
-      color: #6366f1;
-      font-size: 14px;
+      color: $info;
+      font-size: $text-md;
     }
 
     .confidence-bar {
@@ -391,22 +435,68 @@ async function handleRevoke() {
     }
 
     .ai-safe-text {
-      font-size: 13px;
-      color: #10b981;
+      font-size: $text-base;
+      color: $success;
+    }
+
+    .ai-note {
+      font-size: $text-xs;
+      color: $text-muted;
+      line-height: $leading-normal;
+    }
+
+    .ai-priority {
+      display: flex;
+      align-items: center;
+      gap: $space-2;
     }
   }
 }
 
-.revoke-section {
-  margin-top: 16px;
-  padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
+.submitter-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  .submitter-name {
+    font-weight: 600;
+    color: $text-primary;
+  }
+
+  .submitter-contact {
+    font-size: $text-sm;
+    color: $text-muted;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+.current-approver {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: $space-2;
+  padding: 10px 14px;
+  background: $brand-light;
+  border: 1px solid $brand-subtle;
+  border-radius: $radius-md;
+  margin-bottom: $space-4;
+  font-size: $text-base;
+  color: $text-secondary;
+
+  .el-icon { color: $brand; }
+  b { color: $brand; font-weight: 600; }
+  .current-node { color: $text-muted; font-size: $text-sm; }
+}
+
+.revoke-section {
+  margin-top: $space-4;
+  padding-top: $space-4;
+  border-top: 1px solid $border-light;
+  display: flex;
+  align-items: center;
+  gap: $space-3;
 
   .revoke-hint {
-    font-size: 12px;
+    font-size: $text-sm;
     color: $text-muted;
   }
 }

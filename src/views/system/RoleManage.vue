@@ -1,18 +1,39 @@
 <template>
   <div class="page-container">
     <div class="page-header">
-      <div class="page-title"><el-icon><Key /></el-icon> 角色管理</div>
+      <div>
+        <div class="page-title"><el-icon><Key /></el-icon> 角色管理</div>
+        <div class="page-desc">管理系统内置角色与自定义角色的权限定义</div>
+      </div>
       <el-button type="primary" :icon="Plus" @click="openDialog()">新增角色</el-button>
     </div>
 
     <div class="page-card">
-      <el-table :data="tableData" v-loading="loading" stripe empty-text=" ">
-        <el-table-column prop="code" label="角色编码" width="140" />
-        <el-table-column prop="name" label="角色名称" width="160" />
-        <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip>
+      <el-table :data="tableData" v-loading="loading" empty-text=" ">
+        <el-table-column prop="roleCode" label="角色编码" width="160">
+          <template #default="{ row }">
+            <span class="role-code">{{ row.roleCode || '—' }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="roleName" label="角色名称" width="160">
+          <template #default="{ row }">
+            <div class="role-name-cell">
+              <span class="role-avatar">{{ (row.roleName || '?')[0] }}</span>
+              <span class="role-name">{{ row.roleName || '—' }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column prop="description" label="职责描述" min-width="240" show-overflow-tooltip>
           <template #default="{ row }">{{ row.description || '—' }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="120" fixed="right">
+        <el-table-column prop="status" label="状态" width="90">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 'ENABLED' ? 'success' : 'info'" size="small" effect="light">
+              {{ row.status === 'ENABLED' ? '启用' : '停用' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="100" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" @click="openDialog(row)">编辑</el-button>
           </template>
@@ -21,6 +42,7 @@
           <div class="empty-state">
             <el-icon class="empty-icon"><Key /></el-icon>
             <p class="empty-text">暂无角色数据</p>
+            <p class="empty-sub">点击右上角「新增角色」创建第一个角色</p>
           </div>
         </template>
       </el-table>
@@ -28,13 +50,15 @@
 
     <el-dialog v-model="dialogVisible" :title="editingId ? '编辑角色' : '新增角色'" width="480px" destroy-on-close>
       <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">
-        <el-form-item label="角色编码" prop="code"><el-input v-model="form.code" :disabled="!!editingId" placeholder="如 APPROVER" /></el-form-item>
-        <el-form-item label="角色名称" prop="name"><el-input v-model="form.name" placeholder="如 审批人" /></el-form-item>
-        <el-form-item label="描述"><el-input v-model="form.description" type="textarea" :rows="3" maxlength="200" show-word-limit /></el-form-item>
-        <el-form-item label="权限">
-          <el-checkbox-group v-model="form.permissions">
-            <el-checkbox v-for="p in allPermissions" :key="p" :label="p" :value="p">{{ permLabel(p) }}</el-checkbox>
-          </el-checkbox-group>
+        <el-form-item label="角色编码" prop="roleCode">
+          <el-input v-model="form.roleCode" :disabled="!!editingId" placeholder="如 DEPT_MANAGER" />
+        </el-form-item>
+        <el-form-item label="角色名称" prop="roleName">
+          <el-input v-model="form.roleName" placeholder="如 部门经理" />
+        </el-form-item>
+        <el-form-item label="职责描述">
+          <el-input v-model="form.description" type="textarea" :rows="3" maxlength="200" show-word-limit
+                    placeholder="描述该角色的主要职责与权限范围" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -57,13 +81,10 @@ const tableData = ref([])
 const dialogVisible = ref(false)
 const editingId = ref(null)
 const formRef = ref()
-const allPermissions = ['workorder:create', 'workorder:view', 'workorder:approve', 'workorder:manage', 'system:manage', 'statistics:view']
-const PERM_LABELS = { 'workorder:create': '创建工单', 'workorder:view': '查看工单', 'workorder:approve': '审批工单', 'workorder:manage': '工单管理', 'system:manage': '系统管理', 'statistics:view': '统计查看' }
-function permLabel(p) { return PERM_LABELS[p] || p }
-const form = reactive({ code: '', name: '', description: '', permissions: [] })
+const form = reactive({ roleCode: '', roleName: '', description: '' })
 const rules = {
-  code: [{ required: true, message: '请输入角色编码', trigger: 'blur' }],
-  name: [{ required: true, message: '请输入角色名称', trigger: 'blur' }]
+  roleCode: [{ required: true, message: '请输入角色编码', trigger: 'change' }],
+  roleName: [{ required: true, message: '请输入角色名称', trigger: 'change' }]
 }
 
 onMounted(() => fetchList())
@@ -78,8 +99,9 @@ async function fetchList() {
 
 function openDialog(row) {
   editingId.value = row?.id || null
-  Object.assign(form, row || { code: '', name: '', description: '', permissions: [] })
-  if (!row) form.permissions = []
+  Object.assign(form, row
+    ? { roleCode: row.roleCode, roleName: row.roleName, description: row.description }
+    : { roleCode: '', roleName: '', description: '' })
   dialogVisible.value = true
 }
 
@@ -90,10 +112,10 @@ async function handleSave() {
   try {
     if (editingId.value) {
       await updateRole(editingId.value, form)
-      ElMessage.success(`角色「${form.name}」更新成功`)
+      ElMessage.success(`角色「${form.roleName}」更新成功`)
     } else {
       await createRole(form)
-      ElMessage.success(`角色「${form.name}」创建成功`)
+      ElMessage.success(`角色「${form.roleName}」创建成功`)
     }
     dialogVisible.value = false
     fetchList()
@@ -102,4 +124,38 @@ async function handleSave() {
 </script>
 
 <style lang="scss" scoped>
+.role-code {
+  font-family: $font-mono;
+  font-size: $text-sm;
+  color: $text-secondary;
+  background: $gray-100;
+  padding: 2px 8px;
+  border-radius: $radius-xs;
+  border: 1px solid $border-light;
+}
+
+.role-name-cell {
+  display: flex;
+  align-items: center;
+  gap: $space-2;
+
+  .role-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: $radius-sm;
+    background: $brand-light;
+    color: $brand;
+    font-size: $text-sm;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .role-name {
+    font-weight: 600;
+    color: $text-primary;
+  }
+}
 </style>

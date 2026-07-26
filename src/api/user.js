@@ -5,11 +5,6 @@ export function getUserList(params) {
   return request.get('/api/v1/user/list', { params })
 }
 
-// 用户详情
-export function getUserDetail(id) {
-  return request.get(`/api/v1/user/${id}`)
-}
-
 // 新增用户
 export function createUser(data) {
   return request.post('/api/v1/user', data)

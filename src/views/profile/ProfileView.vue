@@ -93,8 +93,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { OfficeBuilding, Phone, Message, Edit, Lock, InfoFilled, Camera } from '@element-plus/icons-vue'
 import { useUserStore } from '@/store/user'
-import { updateProfile, changePassword, uploadAvatar } from '@/api/user'
-import { DEPT_MAP } from '@/utils/constants'
+import { updateProfile, changePassword, uploadAvatar, getDeptList } from '@/api/user'
 
 const userStore = useUserStore()
 const infoFormRef = ref()
@@ -113,7 +112,11 @@ const roleTagType = computed(() => {
   const map = { ADMIN: 'danger', APPROVER: 'warning', EMPLOYEE: '' }
   return map[userStore.role] || 'info'
 })
-const deptName = computed(() => DEPT_MAP[userStore.deptCode] || userStore.deptCode || '未分配')
+const deptOptions = ref([])
+const deptName = computed(() => {
+  const d = deptOptions.value.find(x => x.deptCode === userStore.deptCode)
+  return d ? d.deptName : (userStore.deptCode || '未分配')
+})
 const avatarChar = computed(() => (userStore.realName || userStore.username || '?')[0])
 
 const infoRules = {
@@ -142,9 +145,13 @@ const pwdRules = {
   confirmPassword: [{ validator: validateConfirm, trigger: 'blur' }]
 }
 
-onMounted(() => {
+onMounted(async () => {
   form.phone = userStore.phone || ''
   form.email = userStore.email || ''
+  try {
+    const res = await getDeptList()
+    deptOptions.value = res.data || []
+  } catch {}
 })
 
 function triggerUpload() {
@@ -214,68 +221,94 @@ async function handleChangePwd() {
 
 .profile-banner {
   position: relative;
-  border-radius: 12px;
+  border-radius: $radius-lg;
   overflow: hidden;
-  margin-bottom: 20px;
-  background: #fff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  margin-bottom: $space-5;
+  background: $bg-card;
+  border: 1px solid $border-light;
+  box-shadow: $shadow-xs;
 
   .banner-bg {
-    height: 88px;
-    background: linear-gradient(135deg, #4f6ef7 0%, #7c3aed 100%);
+    height: 118px;
+    background: linear-gradient(115deg, #1e3a8a 0%, #2563eb 58%, #3b82f6 100%);
+    position: relative;
+
+    // 点阵纹理，增加质感
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+      background-size: 18px 18px;
+      opacity: 0.5;
+    }
+
+    // 柔和光晕
+    &::after {
+      content: '';
+      position: absolute;
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 68%);
+      right: -60px;
+      top: -140px;
+    }
   }
 
   .banner-content {
     display: flex;
     align-items: flex-end;
-    gap: 20px;
-    padding: 0 28px 20px;
-    margin-top: -36px;
+    gap: $space-5;
+    padding: 0 $space-7 $space-5;
+    margin-top: -40px;
     position: relative;
+    z-index: 1;
 
     .avatar-wrapper {
       position: relative;
       flex-shrink: 0;
 
       .avatar-img {
-        border: 3px solid #fff;
-        box-shadow: 0 2px 8px rgba(79, 110, 247, 0.3);
+        border: 4px solid $bg-card;
+        box-shadow: $shadow-md;
       }
 
       .avatar {
-        width: 72px;
-        height: 72px;
+        width: 80px;
+        height: 80px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #4f6ef7, #7c3aed);
+        background: linear-gradient(135deg, $brand, #3b82f6);
         color: #fff;
-        font-size: 28px;
+        font-size: 30px;
         font-weight: 700;
         display: flex;
         align-items: center;
         justify-content: center;
-        border: 3px solid #fff;
-        box-shadow: 0 2px 8px rgba(79, 110, 247, 0.3);
+        border: 4px solid $bg-card;
+        box-shadow: $shadow-md;
       }
 
       .avatar-upload-btn {
         position: absolute;
-        right: 0;
-        bottom: 2px;
-        width: 26px;
-        height: 26px;
+        right: 2px;
+        bottom: 4px;
+        width: 28px;
+        height: 28px;
         border-radius: 50%;
-        background: #4f6ef7;
+        background: $brand;
         color: #fff;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 13px;
+        font-size: $text-base;
         cursor: pointer;
-        border: 2px solid #fff;
-        transition: background 0.2s;
+        border: 2px solid $bg-card;
+        transition: all $duration-fast $ease-in-out;
 
         &:hover {
-          background: #3b5de7;
+          background: $brand-hover;
+          transform: scale(1.08);
         }
       }
 
@@ -285,23 +318,25 @@ async function handleChangePwd() {
     }
 
     .banner-info {
-      padding-bottom: 4px;
+      padding-bottom: $space-1;
 
       .banner-name {
-        font-size: 20px;
+        font-size: $text-xl;
         font-weight: 700;
-        color: #1e293b;
+        color: $text-primary;
         display: flex;
         align-items: center;
-        gap: 10px;
-        margin-bottom: 8px;
+        gap: $space-3;
+        margin-bottom: $space-2;
+        letter-spacing: -0.01em;
       }
 
       .banner-meta {
         display: flex;
-        gap: 24px;
-        font-size: 13px;
-        color: #64748b;
+        gap: $space-6;
+        font-size: $text-base;
+        color: $text-secondary;
+        flex-wrap: wrap;
 
         span {
           display: flex;
@@ -309,7 +344,7 @@ async function handleChangePwd() {
           gap: 5px;
 
           .el-icon {
-            color: #4f6ef7;
+            color: $brand;
             font-size: 14px;
           }
         }
@@ -320,25 +355,25 @@ async function handleChangePwd() {
 
 .profile-body {
   .profile-card {
-    background: #fff;
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    background: $bg-card;
+    border-radius: $radius-lg;
+    padding: $space-6;
+    border: 1px solid $border-light;
     min-height: 420px;
 
     .card-header {
-      font-size: 15px;
+      font-size: $text-md;
       font-weight: 600;
-      color: #1e293b;
-      margin-bottom: 24px;
+      color: $text-primary;
+      margin-bottom: $space-6;
       display: flex;
       align-items: center;
-      gap: 8px;
-      padding-bottom: 14px;
-      border-bottom: 1px solid #f1f5f9;
+      gap: $space-2;
+      padding-bottom: $space-3;
+      border-bottom: 1px solid $border-light;
 
       .el-icon {
-        color: #4f6ef7;
+        color: $brand;
         font-size: 17px;
       }
     }
@@ -346,10 +381,10 @@ async function handleChangePwd() {
     .pwd-tips {
       display: flex;
       align-items: center;
-      gap: 6px;
-      font-size: 12px;
-      color: #94a3b8;
-      margin-top: 4px;
+      gap: $space-2;
+      font-size: $text-xs;
+      color: $text-muted;
+      margin-top: $space-1;
 
       .el-icon {
         font-size: 14px;

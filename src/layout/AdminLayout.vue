@@ -1,13 +1,13 @@
 <template>
-  <el-container class="admin-layout">
+  <div class="admin-layout">
     <Sidebar :collapsed="collapsed" />
-    <el-container class="main-container">
+    <div class="main-area">
       <Header :collapsed="collapsed" @toggle-sidebar="collapsed = !collapsed" />
-      <el-main class="main-content">
+      <main class="main-content">
         <router-view />
-      </el-main>
-    </el-container>
-  </el-container>
+      </main>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -21,19 +21,23 @@ const collapsed = ref(false)
 <style lang="scss" scoped>
 .admin-layout {
   height: 100vh;
+  display: flex;
   overflow: hidden;
 }
 
-.main-container {
+.main-area {
+  flex: 1;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
 }
 
 .main-content {
-  background: $content-bg;
-  padding: 20px;
-  overflow-y: auto;
   flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: $bg-page;
+  padding: 0;
 }
 </style>

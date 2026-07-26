@@ -49,7 +49,7 @@ async function handleUpload({ file }) {
   }
   try {
     const res = await uploadAttachment(file)
-    const url = res.data
+    const url = res.data?.url
     const newList = [...props.modelValue, url]
     emit('update:modelValue', newList)
   } catch {

@@ -19,9 +19,13 @@
           <el-icon><User /></el-icon>
           <span>审批人：{{ node.approverName || '待分配' }}</span>
         </div>
-        <div v-if="node.comment" class="node-comment">
+        <div v-if="node.operatorName && node.operatorName !== node.approverName" class="node-info">
+          <el-icon><User /></el-icon>
+          <span>经办人：{{ node.operatorName }}</span>
+        </div>
+        <div v-if="node.opinion || node.comment" class="node-comment">
           <el-icon><ChatDotSquare /></el-icon>
-          <span>意见：{{ node.comment }}</span>
+          <span>意见：{{ node.opinion || node.comment }}</span>
         </div>
         <div v-else-if="node.status === 'APPROVED' || node.status === 'REJECTED'" class="node-comment no-comment">
           <el-icon><ChatDotSquare /></el-icon>
