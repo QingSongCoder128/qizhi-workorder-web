@@ -25,7 +25,6 @@
           <template #default="{ row }">
             <div class="order-cell">
               <div class="order-cell__title">
-                <el-icon v-if="row.urgent" class="urgent-flag"><WarningFilled /></el-icon>
                 <span class="title-text" @click="$router.push(`/workorder/detail/${row.id}`)">{{ row.title }}</span>
                 <el-tag v-if="isOrderTimeout(row)" type="danger" size="small" effect="dark" class="timeout-chip">超时</el-tag>
               </div>
@@ -75,9 +74,10 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
+import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Search, Download, WarningFilled } from '@element-plus/icons-vue'
+import { Search, Download } from '@element-plus/icons-vue'
 import { ORDER_STATUS, ORDER_TYPE } from '@/utils/constants'
 import { getAllWorkOrders } from '@/api/workOrder'
 import { exportExcel } from '@/api/statistics'
@@ -91,17 +91,43 @@ const exporting = ref(false)
 const tableData = ref([])
 const total = ref(0)
 const query = reactive({ keyword: '', status: '', type: '', page: 1, pageSize: 10 })
+const route = useRoute()
+// 从工作台卡片跳转携带的多状态筛选（如 PENDING_AI,PENDING_APPROVE）
+const routeStatus = ref('')
 
-onMounted(() => fetchList())
+function applyRouteStatus(val) {
+  routeStatus.value = ''
+  query.status = ''
+  if (val) {
+    // 标准单状态 → 同步到下拉框显示；TIMEOUT/多状态 → 仅走 API 级筛选
+    if (ORDER_STATUS[val]) query.status = val
+    else routeStatus.value = val
+  }
+  query.page = 1
+}
+
+onMounted(() => {
+  applyRouteStatus(route.query.status)
+  fetchList()
+})
+
+// 已在本页时再次从工作台跳转，路由参数变化后重新筛选
+watch(() => route.query.status, (val) => {
+  applyRouteStatus(val)
+  fetchList()
+})
 
 function rowClassName({ row }) {
-  return isOrderTimeout(row) ? 'timeout-row' : ''
+  if (!isOrderTimeout(row)) return ''
+  const p = (row.priority || 'NORMAL').toLowerCase()
+  return `timeout-${p}`
 }
 
 async function fetchList() {
   loading.value = true
   try {
-    const res = await getAllWorkOrders(query)
+    const params = { ...query, status: query.status || routeStatus.value }
+    const res = await getAllWorkOrders(params)
     tableData.value = res.data?.records || []
     total.value = res.data?.total || 0
   } catch {} finally {
@@ -110,6 +136,7 @@ async function fetchList() {
 }
 
 function resetAndFetch() {
+  routeStatus.value = ''
   query.page = 1
   fetchList()
 }
@@ -117,7 +144,8 @@ function resetAndFetch() {
 async function handleExport() {
   exporting.value = true
   try {
-    const res = await exportExcel(query)
+    const params = { ...query, status: query.status || routeStatus.value }
+    const res = await exportExcel(params)
     const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
@@ -146,12 +174,6 @@ async function handleExport() {
     align-items: center;
     gap: 6px;
 
-    .urgent-flag {
-      color: $danger;
-      font-size: 14px;
-      flex-shrink: 0;
-    }
-
     .title-text {
       font-weight: 600;
       font-size: $text-md;
@@ -176,10 +198,15 @@ async function handleExport() {
 </style>
 
 <style lang="scss">
-.el-table .timeout-row > td.el-table__cell {
-  background-color: #{$danger-light} !important;
+// 超时行：统一品牌浅蓝底（契合蓝色主题，超时标签已足够表达严重度）
+.el-table .timeout-urgent > td.el-table__cell,
+.el-table .timeout-normal > td.el-table__cell,
+.el-table .timeout-low > td.el-table__cell {
+  background-color: #f0f6ff !important;
 }
-.el-table .timeout-row:hover > td.el-table__cell {
-  background-color: #fee2e2 !important;
+.el-table .timeout-urgent:hover > td.el-table__cell,
+.el-table .timeout-normal:hover > td.el-table__cell,
+.el-table .timeout-low:hover > td.el-table__cell {
+  background-color: #e8f1ff !important;
 }
 </style>

@@ -1,18 +1,9 @@
 <template>
   <el-aside :width="collapsed ? '64px' : '232px'" class="sidebar">
-    <!-- Logo -->
-    <div class="sidebar-logo" @click="$router.push('/dashboard')">
-      <div class="logo-mark">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-          <rect x="3" y="3" width="8" height="8" rx="2" fill="currentColor" opacity="0.9" />
-          <rect x="13" y="3" width="8" height="8" rx="2" fill="currentColor" opacity="0.5" />
-          <rect x="3" y="13" width="8" height="8" rx="2" fill="currentColor" opacity="0.5" />
-          <rect x="13" y="13" width="8" height="8" rx="2" fill="currentColor" opacity="0.3" />
-        </svg>
-      </div>
-      <transition name="fade">
-        <span v-show="!collapsed" class="logo-text">企智工单</span>
-      </transition>
+    <!-- 品牌标识 -->
+    <div class="sidebar-brand" @click="$router.push('/dashboard')">
+      <img class="brand-logo" src="@/assets/logo.png" alt="企智协同" />
+      <span v-show="!collapsed" class="brand-name">企智协同工单调度系统</span>
     </div>
 
     <!-- 菜单 -->
@@ -105,6 +96,7 @@ import { useRoute } from 'vue-router'
 import { useUserStore } from '@/store/user'
 import { useMessageStore } from '@/store/message'
 import { getPendingStats } from '@/api/approve'
+import { getSessionId } from '@/utils/auth'
 
 defineProps({ collapsed: Boolean })
 
@@ -120,6 +112,11 @@ const unreadCount = computed(() => messageStore.unreadCount || 0)
 // 待审批角标：审批人/管理员登录后可见的真实待办数（approve-service pending/stats）
 const pendingCount = ref(0)
 async function fetchPendingCount() {
+  // 快速路径：未登录时直接重置，不发起请求（拦截器层也有同样的守卫）
+  if (!getSessionId()) {
+    pendingCount.value = 0
+    return
+  }
   if (!['APPROVER', 'ADMIN'].includes(userStore.role)) {
     pendingCount.value = 0
     return
@@ -144,40 +141,34 @@ watch(() => route.path, fetchPendingCount)
   border-right: 1px solid $sidebar-border;
 }
 
-.sidebar-logo {
-  height: $header-height;
+.sidebar-brand {
   display: flex;
   align-items: center;
-  padding: 0 16px;
-  gap: 10px;
+  gap: 9px;
+  padding: 16px 14px 12px;
   cursor: pointer;
   flex-shrink: 0;
   border-bottom: 1px solid $sidebar-border;
 
-  .logo-mark {
-    width: 32px;
-    height: 32px;
-    border-radius: $radius-md;
-    background: $brand;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #fff;
+  .brand-logo {
+    width: 26px;
+    height: 30px;
+    object-fit: contain;
     flex-shrink: 0;
   }
 
-  .logo-text {
-    color: #f9fafb;
-    font-size: 15px;
-    font-weight: 600;
+  .brand-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: #10213d;
     white-space: nowrap;
-    letter-spacing: 0.02em;
+    letter-spacing: -0.2px;
   }
 }
 
 .sidebar-menu-wrap {
   flex: 1;
-  padding: 8px;
+  padding: 12px 10px;
 }
 
 .nav-section {
@@ -185,12 +176,11 @@ watch(() => route.path, fetchPendingCount)
 }
 
 .nav-group-title {
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: rgba(255, 255, 255, 0.3);
-  padding: 12px 12px 4px;
+  letter-spacing: 0.06em;
+  color: #a3b0c2;
+  padding: 14px 12px 5px;
   user-select: none;
 }
 
@@ -198,11 +188,11 @@ watch(() => route.path, fetchPendingCount)
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 9px 12px;
+  padding: 10px 12px;
   border-radius: $radius-md;
   color: $sidebar-text;
   text-decoration: none;
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 450;
   transition: all $duration-fast $ease-in-out;
   position: relative;
@@ -210,13 +200,13 @@ watch(() => route.path, fetchPendingCount)
 
   &:hover {
     background: $sidebar-bg-hover;
-    color: #e5e7eb;
+    color: #334155;
   }
 
   &.active {
     background: $sidebar-bg-active;
     color: $sidebar-text-active;
-    font-weight: 550;
+    font-weight: 600;
 
     .el-icon { color: $sidebar-text-active; }
   }
@@ -247,12 +237,5 @@ watch(() => route.path, fetchPendingCount)
   align-items: center;
   justify-content: center;
   line-height: 1;
-}
-
-.fade-enter-active, .fade-leave-active {
-  transition: opacity $duration-fast;
-}
-.fade-enter-from, .fade-leave-to {
-  opacity: 0;
 }
 </style>

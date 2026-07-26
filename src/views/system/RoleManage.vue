@@ -84,9 +84,10 @@ const dialogVisible = ref(false)
 const editingId = ref(null)
 const formRef = ref()
 const form = reactive({ roleCode: '', roleName: '', description: '' })
+// 校验仅在点击保存按钮时触发
 const rules = {
-  roleCode: [{ required: true, message: '请输入角色编码', trigger: 'change' }],
-  roleName: [{ required: true, message: '请输入角色名称', trigger: 'change' }]
+  roleCode: [{ required: true, message: '请输入角色编码', trigger: 'submit' }],
+  roleName: [{ required: true, message: '请输入角色名称', trigger: 'submit' }]
 }
 
 onMounted(() => fetchList())

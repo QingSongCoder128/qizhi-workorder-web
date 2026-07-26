@@ -101,13 +101,13 @@ $duration-slow: 300ms;
 $ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 $ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 
-// ─── 侧边栏（深色） ───
-$sidebar-bg: #111827;
-$sidebar-bg-hover: rgba(255, 255, 255, 0.06);
-$sidebar-bg-active: rgba(37, 99, 235, 0.12);
-$sidebar-text: #9ca3af;
-$sidebar-text-active: #93c5fd;
-$sidebar-border: rgba(255, 255, 255, 0.06);
+// ─── 侧边栏（浅色） ───
+$sidebar-bg: #ffffff;
+$sidebar-bg-hover: #f5f8ff;
+$sidebar-bg-active: #e8f1ff;
+$sidebar-text: #5a6a7f;
+$sidebar-text-active: #2563eb;
+$sidebar-border: #e8edf5;
 
 // ─── 表格 ───
 $table-header-bg: $gray-100;

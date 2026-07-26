@@ -31,13 +31,13 @@
           </el-col>
           <el-col :span="12">
             <el-form-item label="紧急程度">
-              <div class="urgent-switch">
-                <el-switch
-                  v-model="form.urgent" active-text="紧急" inactive-text="普通"
-                  active-color="#ef4444"
-                />
-                <span v-if="form.urgent" class="urgent-hint">紧急工单将优先审批，60分钟超时督办</span>
-              </div>
+              <el-switch
+                v-model="form.urgent"
+                inactive-text="普通"
+                active-text="紧急"
+                active-color="#f87171"
+                inactive-color="#cbd5e1"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -117,11 +117,12 @@ const form = reactive({
   urgent: false
 })
 
+// 校验仅在点击提交按钮时触发，不在 blur/change 时自动报红
 const rules = {
-  title: [{ required: true, message: '请输入工单标题', trigger: 'blur' }],
-  type: [{ required: true, message: '请选择工单类型', trigger: 'change' }],
-  departmentCode: [{ required: true, message: '请选择所属部门', trigger: 'change' }],
-  detail: [{ required: true, message: '请输入详细描述', trigger: 'blur' }]
+  title: [{ required: true, message: '请输入工单标题', trigger: 'submit' }],
+  type: [{ required: true, message: '请选择工单类型', trigger: 'submit' }],
+  departmentCode: [{ required: true, message: '请选择所属部门', trigger: 'submit' }],
+  detail: [{ required: true, message: '请输入详细描述', trigger: 'submit' }]
 }
 
 function handleUploadSuccess(res, file) {
@@ -143,7 +144,6 @@ async function handleSubmit() {
   try {
     await submitWorkOrder({
       ...form,
-      priority: form.urgent ? 'URGENT' : 'NORMAL',
       attachments: attachments.value
     })
     ElMessage.success('工单提交成功，AI 正在智能分析中...')
@@ -168,16 +168,7 @@ function handleReset() {
   max-width: 900px;
 }
 
-.urgent-switch {
-  display: flex;
-  align-items: center;
-  gap: $space-3;
 
-  .urgent-hint {
-    font-size: $text-sm;
-    color: $danger;
-  }
-}
 
 .submit-area {
   display: flex;

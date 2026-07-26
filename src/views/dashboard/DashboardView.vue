@@ -1,5 +1,5 @@
 <template>
-  <div class="dashboard page-container">
+  <div class="dashboard" :class="{ 'page-container': role !== 'ADMIN' }">
     <EmployeeDashboard v-if="role === 'EMPLOYEE'" />
     <ApproverDashboard v-else-if="role === 'APPROVER'" />
     <AdminDashboard v-else />

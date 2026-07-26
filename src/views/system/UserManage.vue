@@ -53,9 +53,10 @@
         </el-table-column>
         <el-table-column label="操作" width="130" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" @click="openDialog(row)">编辑</el-button>
-            <el-dropdown trigger="click" @command="(cmd) => handleMoreCommand(cmd, row)">
-              <el-button link type="primary">更多<el-icon class="el-icon--right"><ArrowDown /></el-icon></el-button>
+            <div class="action-cell">
+              <el-button link type="primary" @click="openDialog(row)">编辑</el-button>
+              <el-dropdown trigger="click" @command="(cmd) => handleMoreCommand(cmd, row)">
+                <el-button link type="primary">更多<el-icon class="el-icon--right"><ArrowDown /></el-icon></el-button>
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item command="reset"><el-icon><Key /></el-icon>重置密码</el-dropdown-item>
@@ -66,6 +67,7 @@
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
+            </div>
           </template>
         </el-table-column>
         <template #empty>
@@ -203,6 +205,12 @@ async function handleToggle(row) {
 </script>
 
 <style lang="scss" scoped>
+.action-cell {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .contact-text {
   font-family: $font-mono;
   font-size: $text-base;

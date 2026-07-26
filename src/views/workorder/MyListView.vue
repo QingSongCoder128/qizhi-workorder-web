@@ -36,7 +36,7 @@
 
       <!-- 表格 -->
       <el-table
-        v-loading="loading" :data="tableData" class="order-table" :row-class-name="rowClassName"
+        v-loading="loading" :data="tableData" class="order-table"
         empty-text=" " @row-click="goDetail"
       >
         <el-table-column prop="orderNo" label="工单编号" width="175">
@@ -47,7 +47,6 @@
         <el-table-column prop="title" label="标题" min-width="220" show-overflow-tooltip>
           <template #default="{ row }">
             <div class="title-cell">
-              <el-icon v-if="row.urgent" class="urgent-icon"><WarningFilled /></el-icon>
               <span>{{ row.title }}</span>
             </div>
           </template>
@@ -136,7 +135,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { Plus, Search, WarningFilled } from '@element-plus/icons-vue'
+import { Plus, Search } from '@element-plus/icons-vue'
 import { ORDER_STATUS, ORDER_TYPE, PRIORITY, AI_CATEGORY } from '@/utils/constants'
 import { getMyWorkOrders, resubmitWorkOrder } from '@/api/workOrder'
 import { formatDate } from '@/utils/format'
@@ -179,10 +178,6 @@ function switchTab(status) {
 
 function goDetail(row) {
   router.push(`/workorder/detail/${row.id}`)
-}
-
-function rowClassName({ row }) {
-  return row.urgent ? 'urgent-row' : ''
 }
 
 function openResubmit(row) {
@@ -265,12 +260,6 @@ async function doResubmit() {
   display: flex;
   align-items: center;
   gap: 6px;
-
-  .urgent-icon {
-    color: $warning;
-    font-size: 14px;
-    flex-shrink: 0;
-  }
 }
 
 .ai-tag {
@@ -287,8 +276,4 @@ async function doResubmit() {
   font-size: $text-sm;
 }
 
-:deep(.urgent-row) {
-  td { border-left: 2px solid transparent; }
-  td:first-child { border-left: 2px solid $warning; }
-}
 </style>

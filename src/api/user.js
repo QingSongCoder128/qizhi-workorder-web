@@ -45,6 +45,11 @@ export function updateDept(id, data) {
   return request.put(`/api/v1/dept/${id}`, data)
 }
 
+// 删除部门
+export function deleteDept(id) {
+  return request.delete(`/api/v1/dept/${id}`)
+}
+
 // 角色列表
 export function getRoleList() {
   return request.get('/api/v1/role/list')

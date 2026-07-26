@@ -8,6 +8,19 @@ const request = axios.create({
   timeout: 15000
 })
 
+// ─── 请求生命周期管理（AbortController） ───
+const pendingRequests = new Map()
+let requestId = 0
+
+/**
+ * 取消所有在途请求。
+ * 退出登录时调用：被取消的请求会走 axios.isCancel 分支，静默 reject，不触发任何 UI 反馈。
+ */
+export function cancelAllRequests() {
+  pendingRequests.forEach(controller => controller.abort())
+  pendingRequests.clear()
+}
+
 function roleScopedUrl(url) {
   const role = getRole()
   const namespace = role === 'ADMIN' ? 'admin' : role === 'APPROVER' ? 'approver' : 'employee'
@@ -31,15 +44,29 @@ function roleScopedUrl(url) {
   return url
 }
 
-// 请求拦截器：注入 sessionId
+// 请求拦截器：会话守卫 + 注入 sessionId + 注册 AbortController
 request.interceptors.request.use(
   config => {
     if (config.url?.startsWith('/api/v1/') && !config.url.startsWith('/api/v1/auth/')) {
+      // 会话已清除时拒绝发出受保护请求（从源头阻断退出后的残留调用）
+      if (!getSessionId()) {
+        const controller = new AbortController()
+        controller.abort()
+        config.signal = controller.signal
+        return config
+      }
       config.url = roleScopedUrl(config.url)
     }
     const sessionId = getSessionId()
     if (sessionId) {
       config.headers['X-Session-Id'] = sessionId
+    }
+    // 注册 AbortController，支持全局取消
+    if (!config.signal) {
+      const controller = new AbortController()
+      config.signal = controller.signal
+      config._requestId = ++requestId
+      pendingRequests.set(config._requestId, controller)
     }
     return config
   },
@@ -49,6 +76,8 @@ request.interceptors.request.use(
 // 响应拦截器：统一错误处理
 request.interceptors.response.use(
   response => {
+    // 请求完成，移出待处理队列
+    if (response.config._requestId) pendingRequests.delete(response.config._requestId)
     // Blob 响应（文件下载）直接返回
     if (response.config.responseType === 'blob') {
       return response.data
@@ -66,6 +95,11 @@ request.interceptors.response.use(
     return res
   },
   error => {
+    if (error.config?._requestId) pendingRequests.delete(error.config._requestId)
+    // 被 AbortController 取消的请求：静默处理，不弹任何提示
+    if (axios.isCancel(error)) {
+      return Promise.reject(error)
+    }
     if (error.response) {
       const status = error.response.status
       if (status === 401) {

@@ -38,7 +38,6 @@
               </el-descriptions-item>
               <el-descriptions-item label="标题" :span="2">
                 <span class="detail-title">{{ detail.title }}</span>
-                <el-icon v-if="detail.urgent" class="urgent-badge"><WarningFilled /></el-icon>
               </el-descriptions-item>
               <el-descriptions-item label="优先级">
                 <PriorityTag v-if="detail.priority" :priority="detail.priority" />
@@ -190,7 +189,7 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Edit, MagicStick, Stamp, CircleCheck, WarningFilled, RefreshRight, RemoveFilled, User } from '@element-plus/icons-vue'
+import { Edit, MagicStick, Stamp, CircleCheck, RefreshRight, RemoveFilled, User } from '@element-plus/icons-vue'
 import { ORDER_STATUS, ORDER_TYPE, AI_CATEGORY, DEPT_MAP, safeText } from '@/utils/constants'
 import { getWorkOrderDetail, resubmitWorkOrder, revokeWorkOrder, downloadAttachment } from '@/api/workOrder'
 import { getApprovalRecordsByWorkOrder } from '@/api/approve'
@@ -382,12 +381,6 @@ async function handleRevoke() {
 .detail-title {
   font-weight: 600;
   font-size: $text-md;
-}
-
-.urgent-badge {
-  color: $danger;
-  margin-left: 6px;
-  font-size: 16px;
 }
 
 .detail-content {

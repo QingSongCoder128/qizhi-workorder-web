@@ -37,7 +37,7 @@ const collapsed = ref(false)
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  background: $bg-page;
+  background: linear-gradient(160deg, #f0f5ff 0%, #f5f8fe 40%, #f8fafc 100%);
   padding: 0;
 }
 </style>

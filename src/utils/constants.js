@@ -28,8 +28,8 @@ export const ORDER_TYPE = {
 // 优先级
 export const PRIORITY = {
   URGENT: { label: '紧急', color: '#ef4444', type: 'danger' },
-  NORMAL: { label: '正常', color: '#64748b', type: 'info' },
-  LOW: { label: '低', color: '#94a3b8', type: 'info' }
+  NORMAL: { label: '正常', color: '#3b82f6', type: 'primary' },
+  LOW: { label: '低优', color: '#10b981', type: 'success' }
 }
 
 // 用户角色

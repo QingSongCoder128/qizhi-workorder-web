@@ -6,10 +6,6 @@
           <component :is="collapsed ? 'Expand' : 'Fold'" />
         </el-icon>
       </button>
-      <div class="header-title">
-        <span class="current-page">{{ $route.meta.title || '工作台' }}</span>
-        <span v-if="$route.meta.parent" class="parent-path">{{ $route.meta.parent }}</span>
-      </div>
     </div>
 
     <div class="header-right">
@@ -57,6 +53,8 @@ import { ElMessageBox } from 'element-plus'
 import { useUserStore } from '@/store/user'
 import { useMessageStore } from '@/store/message'
 import { logout as logoutApi } from '@/api/auth'
+import { cancelAllRequests } from '@/api/request'
+import { getSessionId } from '@/utils/auth'
 
 defineProps({ collapsed: Boolean })
 defineEmits(['toggle-sidebar'])
@@ -80,8 +78,19 @@ async function handleCommand(cmd) {
   } else if (cmd === 'logout') {
     try {
       await ElMessageBox.confirm('确定退出登录吗？', '提示', { type: 'warning', confirmButtonText: '退出', cancelButtonText: '取消' })
-      try { await logoutApi() } catch {}
+      // 专业退出流程：
+      // 1. 保存 sessionId（通知后端便会话失效需要）
+      const sid = getSessionId()
+      // 2. 立即取消所有在途请求（被 abort 的请求静默失败，不触发任何 UI 反馈）
+      cancelAllRequests()
+      // 3. 通知后端便会话失效（显式携带 sessionId，不依赖拦截器；失败不影响退出）
+      if (sid) {
+        logoutApi({ headers: { 'X-Session-Id': sid } }).catch(() => {})
+      }
+      // 4. 清除本地状态（此后拦截器会拒绝发出任何受保护请求）
       userStore.logout()
+      messageStore.clear()
+      // 5. 跳转登录页
       router.push('/login')
     } catch {}
   }
@@ -91,7 +100,8 @@ async function handleCommand(cmd) {
 <style lang="scss" scoped>
 .app-header {
   height: $header-height;
-  background: $bg-card;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -123,23 +133,6 @@ async function handleCommand(cmd) {
   &:hover {
     background: $bg-hover;
     color: $text-primary;
-  }
-}
-
-.header-title {
-  display: flex;
-  align-items: baseline;
-  gap: $space-2;
-
-  .current-page {
-    font-size: $text-lg;
-    font-weight: 600;
-    color: $text-primary;
-  }
-
-  .parent-path {
-    font-size: $text-sm;
-    color: $text-muted;
   }
 }
 
