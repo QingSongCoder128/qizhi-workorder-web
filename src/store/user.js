@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { login as loginApi } from '@/api/auth'
 import { getCurrentUser } from '@/api/user'
-import { setSessionId, removeSessionId } from '@/utils/auth'
+import { setSessionId, removeSessionId, setAccessContext } from '@/utils/auth'
 
 export const useUserStore = defineStore('user', () => {
   const userId = ref(null)
@@ -30,6 +30,7 @@ export const useUserStore = defineStore('user', () => {
     avatarUrl.value = data.avatarUrl || ''
     permissions.value = data.permissions || []
     setSessionId(data.sessionId)
+    setAccessContext(data.role, permissions.value)
   }
 
   async function fetchUserInfo() {
@@ -44,6 +45,7 @@ export const useUserStore = defineStore('user', () => {
     email.value = data.email || ''
     avatarUrl.value = data.avatarUrl || ''
     permissions.value = data.permissions || []
+    setAccessContext(data.roleCode, permissions.value)
   }
 
   function logout() {

@@ -39,7 +39,7 @@
     </el-row>
 
     <!-- 最近工单 + 消息 -->
-    <el-row :gutter="16">
+    <el-row :gutter="16" class="list-row">
       <el-col :span="14">
         <div class="panel">
           <div class="panel-header">

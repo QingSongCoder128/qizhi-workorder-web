@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-import { getSessionId, removeSessionId } from '@/utils/auth'
+import { getSessionId, getRole, removeSessionId } from '@/utils/auth'
 import router from '@/router'
 
 const request = axios.create({
@@ -8,9 +8,35 @@ const request = axios.create({
   timeout: 15000
 })
 
+function roleScopedUrl(url) {
+  const role = getRole()
+  const namespace = role === 'ADMIN' ? 'admin' : role === 'APPROVER' ? 'approver' : 'employee'
+  const mappings = [
+    ['/api/v1/approve/template', '/api/v1/admin/approval-templates'],
+    ['/api/v1/message/dead-letter', '/api/v1/admin/dead-letters'],
+    ['/api/v1/workorder', `/api/v1/${namespace}/workorders`],
+    ['/api/v1/approve', `/api/v1/${namespace}/approvals`],
+    ['/api/v1/message', `/api/v1/${namespace}/messages`],
+    ['/api/v1/stats', '/api/v1/admin/stats'],
+    ['/api/v1/dept', role === 'ADMIN' ? '/api/v1/admin/departments' : `/api/v1/${namespace}/departments`],
+    ['/api/v1/role', '/api/v1/admin/roles'],
+    ['/api/v1/user', role === 'ADMIN' ? '/api/v1/admin/users' : `/api/v1/${namespace}/user`],
+    ['/api/v1/ai', '/api/v1/admin/ai']
+  ]
+  for (const [legacy, scoped] of mappings) {
+    if (url === legacy || url.startsWith(`${legacy}/`)) {
+      return scoped + url.slice(legacy.length)
+    }
+  }
+  return url
+}
+
 // 请求拦截器：注入 sessionId
 request.interceptors.request.use(
   config => {
+    if (config.url?.startsWith('/api/v1/') && !config.url.startsWith('/api/v1/auth/')) {
+      config.url = roleScopedUrl(config.url)
+    }
     const sessionId = getSessionId()
     if (sessionId) {
       config.headers['X-Session-Id'] = sessionId

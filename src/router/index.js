@@ -96,6 +96,18 @@ const routes = [
         component: () => import('@/views/system/DeadLetter.vue'),
         meta: { title: '死信管理', icon: 'Warning', roles: ['ADMIN'], parent: '系统管理' }
       },
+      {
+        path: 'system/ai-config',
+        name: 'AiConfig',
+        component: () => import('@/views/system/AiConfig.vue'),
+        meta: { title: 'AI 配置', icon: 'Cpu', roles: ['ADMIN'], permission: 'config:manage', parent: '系统管理' }
+      },
+      {
+        path: 'system/rate-limit',
+        name: 'RateLimitConfig',
+        component: () => import('@/views/system/RateLimitConfig.vue'),
+        meta: { title: '限流配置', icon: 'Timer', roles: ['ADMIN'], permission: 'config:manage', parent: '系统管理' }
+      },
       // 个人
       {
         path: 'profile',
@@ -154,6 +166,10 @@ router.beforeEach(async (to, from, next) => {
     // 角色权限校验
     const requiredRoles = to.meta.roles
     if (requiredRoles && !requiredRoles.includes(userStore.role)) {
+      next('/403')
+      return
+    }
+    if (to.meta.permission && !userStore.permissions.includes(to.meta.permission)) {
       next('/403')
       return
     }

@@ -170,10 +170,10 @@ async function handleSave() {
   saving.value = true
   try {
     if (editingId.value) {
-      await updateUser(editingId.value, form)
+      await updateUser(editingId.value, { ...form, roleCodes: form.roleCode ? [form.roleCode] : [] })
       ElMessage.success('用户信息保存成功')
     } else {
-      await createUser(form)
+      await createUser({ ...form, roleCodes: form.roleCode ? [form.roleCode] : [] })
       ElMessage.success('用户创建成功')
     }
     dialogVisible.value = false

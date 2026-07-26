@@ -29,7 +29,7 @@ const props = defineProps({
   modelValue: { type: Array, default: () => [] },
   limit: { type: Number, default: 9 },
   accept: { type: String, default: '.jpg,.jpeg,.png,.pdf' },
-  tip: { type: String, default: '支持 jpg/png/pdf，单张不超过 5MB，最多 9 个' }
+  tip: { type: String, default: '支持 JPG/JPEG/PNG/PDF，单个不超过 5MB，最多 5 个' }
 })
 
 const emit = defineEmits(['update:modelValue'])

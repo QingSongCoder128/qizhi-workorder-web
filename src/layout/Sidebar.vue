@@ -85,6 +85,14 @@
             <el-icon :size="18"><WarningFilled /></el-icon>
             <span v-show="!collapsed" class="nav-label">死信管理</span>
           </router-link>
+          <router-link v-if="canManageConfig" to="/system/ai-config" class="nav-item" :class="{ active: $route.path === '/system/ai-config' }">
+            <el-icon :size="18"><Cpu /></el-icon>
+            <span v-show="!collapsed" class="nav-label">AI 配置</span>
+          </router-link>
+          <router-link v-if="canManageConfig" to="/system/rate-limit" class="nav-item" :class="{ active: $route.path === '/system/rate-limit' }">
+            <el-icon :size="18"><Timer /></el-icon>
+            <span v-show="!collapsed" class="nav-label">限流配置</span>
+          </router-link>
         </div>
       </nav>
     </el-scrollbar>
@@ -106,6 +114,7 @@ const messageStore = useMessageStore()
 
 const isAdmin = computed(() => userStore.role === 'ADMIN')
 const isApproverOrAdmin = computed(() => ['APPROVER', 'ADMIN'].includes(userStore.role))
+const canManageConfig = computed(() => userStore.permissions.includes('config:manage'))
 const unreadCount = computed(() => messageStore.unreadCount || 0)
 
 // 待审批角标：审批人/管理员登录后可见的真实待办数（approve-service pending/stats）

@@ -324,7 +324,7 @@ async function refreshDetail() {
 async function handleApprove() {
   submitting.value = true
   try {
-    await approveOrder(route.params.id, { comment: comment.value })
+    await approveOrder(route.params.id, { comment: comment.value, versionNo: detail.value.versionNo })
     ElMessage.success('审批通过')
     router.push('/approve/pending')
   } catch {} finally { submitting.value = false }
@@ -338,7 +338,7 @@ async function handleReject() {
   try {
     await ElMessageBox.confirm('确定驳回该工单吗？', '确认')
     submitting.value = true
-    await rejectOrder(route.params.id, { comment: comment.value })
+    await rejectOrder(route.params.id, { comment: comment.value, versionNo: detail.value.versionNo })
     ElMessage.success('已驳回')
     router.push('/approve/pending')
   } catch {} finally { submitting.value = false }
@@ -369,7 +369,8 @@ async function handleTransfer() {
     await transferOrder(route.params.id, {
       transferToUserId: transferForm.value.userId,
       transferToUserName: targetUser?.realName || '',
-      reason: transferForm.value.reason
+      reason: transferForm.value.reason,
+      versionNo: detail.value.versionNo
     })
     ElMessage.success('已转交')
     showTransfer.value = false
@@ -398,7 +399,8 @@ async function handleAddNode() {
       nodeName: addNodeForm.value.nodeName || '加签审批',
       approverId: addNodeForm.value.approverId,
       approverName: targetUser?.realName || '',
-      reason: addNodeForm.value.reason
+      reason: addNodeForm.value.reason,
+      versionNo: detail.value.versionNo
     })
     ElMessage.success('加签成功')
     showAddNode.value = false
@@ -425,7 +427,8 @@ async function handleRemoveNode() {
     submitting.value = true
     await removeApprovalNode(route.params.id, {
       nodeOrder: removeNodeForm.value.nodeOrder,
-      reason: removeNodeForm.value.reason
+      reason: removeNodeForm.value.reason,
+      versionNo: detail.value.versionNo
     })
     ElMessage.success('减签成功')
     showRemoveNode.value = false

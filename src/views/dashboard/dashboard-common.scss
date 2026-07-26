@@ -87,7 +87,7 @@
   border-radius: $radius-lg;
   padding: $space-5;
   border: 1px solid $border-light;
-  height: 100%;
+  height: auto;
   display: flex;
   flex-direction: column;
 
@@ -115,6 +115,15 @@
 .order-list {
   display: flex;
   flex-direction: column;
+}
+
+.list-row .panel {
+  min-height: 340px;
+}
+
+.list-row .order-list,
+.list-row .msg-list {
+  min-height: 260px;
 }
 
 .order-item {

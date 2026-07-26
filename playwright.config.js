@@ -25,25 +25,10 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'chrome',
-      use: {
-        browserName: 'chromium',
-        channel: 'chrome',
-        viewport: { width: 1440, height: 900 }
-      }
-    },
-    {
       name: 'edge',
       use: {
         browserName: 'chromium',
         channel: 'msedge',
-        viewport: { width: 1440, height: 900 }
-      }
-    },
-    {
-      name: 'firefox',
-      use: {
-        browserName: 'firefox',
         viewport: { width: 1440, height: 900 }
       }
     }

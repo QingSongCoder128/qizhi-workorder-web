@@ -62,7 +62,7 @@
             <el-icon class="el-icon--upload"><UploadFilled /></el-icon>
             <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
             <template #tip>
-              <div class="el-upload__tip">支持 jpg/png/pdf/doc 格式，单个文件不超过 10MB，最多5个</div>
+              <div class="el-upload__tip">支持 JPG/JPEG/PNG/PDF，单个文件不超过 5MB，最多 5 个</div>
             </template>
           </el-upload>
         </el-form-item>
