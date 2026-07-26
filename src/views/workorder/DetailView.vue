@@ -59,13 +59,18 @@
             </el-descriptions>
 
             <!-- 附件 -->
-            <div v-if="detail.attachments?.length" class="attachment-section">
+            <div v-if="attachmentItems.length" class="attachment-section">
               <span class="attach-label">附件：</span>
-              <el-image
-                v-for="(url, i) in detail.attachments" :key="i"
-                :src="url" :preview-src-list="detail.attachments"
-                fit="cover" class="attach-img"
-              />
+              <template v-for="item in attachmentItems" :key="item.sourceUrl">
+                <el-image
+                  v-if="item.isImage"
+                  :src="item.objectUrl" :preview-src-list="attachmentPreviewUrls"
+                  fit="cover" class="attach-img"
+                />
+                <a v-else class="attachment-file" :href="item.objectUrl" :download="item.fileName">
+                  <el-icon><Document /></el-icon>{{ item.fileName }}
+                </a>
+              </template>
             </div>
 
             <!-- 驳回原因 + 重新提交 -->
@@ -182,12 +187,12 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Edit, MagicStick, Stamp, CircleCheck, WarningFilled, RefreshRight, RemoveFilled, User } from '@element-plus/icons-vue'
 import { ORDER_STATUS, ORDER_TYPE, AI_CATEGORY, DEPT_MAP, safeText } from '@/utils/constants'
-import { getWorkOrderDetail, resubmitWorkOrder, revokeWorkOrder } from '@/api/workOrder'
+import { getWorkOrderDetail, resubmitWorkOrder, revokeWorkOrder, downloadAttachment } from '@/api/workOrder'
 import { getApprovalRecordsByWorkOrder } from '@/api/approve'
 import { getUserList } from '@/api/user'
 import { useUserStore } from '@/store/user'
@@ -201,6 +206,7 @@ const router = useRouter()
 const userStore = useUserStore()
 const loading = ref(false)
 const detail = ref({})
+const attachmentItems = ref([])
 const approvalNodes = ref([])
 const statusHistory = ref([])
 const submitterInfo = ref({})
@@ -226,6 +232,30 @@ const confidenceColor = computed(() => {
   return '#f59e0b'
 })
 
+const attachmentPreviewUrls = computed(() =>
+  attachmentItems.value.filter(item => item.isImage).map(item => item.objectUrl)
+)
+
+async function loadAttachments(urls = []) {
+  attachmentItems.value.forEach(item => URL.revokeObjectURL(item.objectUrl))
+  attachmentItems.value = []
+  const loaded = await Promise.all(urls.map(async sourceUrl => {
+    try {
+      const blob = await downloadAttachment(sourceUrl)
+      const fileName = decodeURIComponent(sourceUrl.split('/').pop() || '附件')
+      return {
+        sourceUrl,
+        fileName,
+        objectUrl: URL.createObjectURL(blob),
+        isImage: blob.type.startsWith('image/')
+      }
+    } catch {
+      return null
+    }
+  }))
+  attachmentItems.value = loaded.filter(Boolean)
+}
+
 const rejectReason = computed(() => {
   const rejected = approvalNodes.value.find(n => n.status === 'REJECTED')
   return rejected?.opinion || ''
@@ -244,6 +274,7 @@ onMounted(async () => {
   try {
     const res = await getWorkOrderDetail(route.params.id)
     detail.value = res.data || {}
+    await loadAttachments(detail.value.attachments || [])
     statusHistory.value = res.data?.statusHistory || []
     // 提交人：按账号名查用户服务获取真实姓名与联系方式（仅管理员可查，非管理员自动降级为账号名）
     if (detail.value.submitterName && userStore.role === 'ADMIN') {
@@ -263,6 +294,10 @@ onMounted(async () => {
   } catch {} finally {
     loading.value = false
   }
+})
+
+onUnmounted(() => {
+  attachmentItems.value.forEach(item => URL.revokeObjectURL(item.objectUrl))
 })
 
 function openResubmit() {
@@ -377,6 +412,19 @@ async function handleRevoke() {
     height: 72px;
     border-radius: $radius-md;
     border: 1px solid $border-color;
+  }
+
+  .attachment-file {
+    display: inline-flex;
+    align-items: center;
+    gap: $space-1;
+    min-height: 36px;
+    padding: 0 $space-3;
+    color: $primary-color;
+    background: $primary-light;
+    border: 1px solid rgba($primary-color, 0.22);
+    border-radius: $radius-md;
+    text-decoration: none;
   }
 }
 

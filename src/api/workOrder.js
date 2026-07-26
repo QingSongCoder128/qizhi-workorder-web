@@ -38,3 +38,8 @@ export function uploadAttachment(file) {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
 }
+
+// 通过带会话头的 Gateway 请求读取受保护附件
+export function downloadAttachment(url) {
+  return request.get(url, { responseType: 'blob' })
+}

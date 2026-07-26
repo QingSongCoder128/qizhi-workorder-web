@@ -51,7 +51,7 @@
 
         <el-form-item label="附件上传">
           <el-upload
-            action="/api/v1/workorder/attachment/upload"
+            action="/api/v1/employee/workorders/attachment/upload"
             :headers="uploadHeaders"
             :on-success="handleUploadSuccess"
             :on-remove="handleRemove"
