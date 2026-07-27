@@ -15,7 +15,9 @@
           <el-option v-for="(v, k) in ORDER_STATUS" :key="k" :label="v.label" :value="k" />
         </el-select>
         <el-select v-model="query.type" placeholder="类型" clearable style="width: 130px" @change="resetAndFetch">
-          <el-option v-for="(v, k) in ORDER_TYPE" :key="k" :label="v.label" :value="k" />
+          <template v-for="(v, k) in ORDER_TYPE" :key="k">
+            <el-option v-if="v.creatable" :label="v.label" :value="k" />
+          </template>
         </el-select>
         <el-button type="primary" :icon="Search" @click="fetchList">查询</el-button>
       </div>

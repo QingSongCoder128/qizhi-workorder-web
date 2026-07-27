@@ -91,3 +91,18 @@ export function uploadAvatar(formData) {
     headers: { 'Content-Type': 'multipart/form-data' }
   })
 }
+
+// 用户统计
+export function getUserStats() {
+  return request.get('/api/v1/user/stats')
+}
+
+// 导出用户列表
+export function exportUsers(params) {
+  return request.get('/api/v1/user/export', { params, responseType: 'blob' })
+}
+
+// 批量操作
+export function batchUserOperation(data) {
+  return request.put('/api/v1/user/batch', data)
+}

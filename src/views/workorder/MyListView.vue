@@ -22,7 +22,9 @@
       <!-- 筛选栏 -->
       <div class="search-bar">
         <el-select v-model="query.type" placeholder="工单类型" clearable style="width: 140px" @change="fetchList">
-          <el-option v-for="(v, k) in ORDER_TYPE" :key="k" :label="v.label" :value="k" />
+          <template v-for="(v, k) in ORDER_TYPE" :key="k">
+            <el-option v-if="v.creatable" :label="v.label" :value="k" />
+          </template>
         </el-select>
         <el-select v-model="query.priority" placeholder="优先级" clearable style="width: 120px" @change="fetchList">
           <el-option v-for="(v, k) in PRIORITY" :key="k" :label="v.label" :value="k" />
