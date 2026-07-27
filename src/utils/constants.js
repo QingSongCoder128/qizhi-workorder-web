@@ -15,12 +15,13 @@ export const ORDER_STATUS = {
 }
 
 // 工单类型（SRS 3.2.1：运维报修、行政采购、人事请假、技术需求）
-// 兼容历史/AI 数据中的 IT_SUPPORT / ADMIN_AFFAIR 编码
+// creatable: 是否可在新建工单时选择（仅 SRS 定义的 4 种）
+// IT_SUPPORT / ADMIN_AFFAIR 仅用于列表页兆容展示历史/AI数据
 export const ORDER_TYPE = {
-  OPS_REPAIR: { label: '运维报修', icon: 'SetUp', color: '#f59e0b' },
-  ADMIN_PURCHASE: { label: '行政采购', icon: 'ShoppingCart', color: '#8b5cf6' },
-  HR_LEAVE: { label: '人事请假', icon: 'Calendar', color: '#10b981' },
-  TECH_REQUEST: { label: '技术需求', icon: 'Monitor', color: '#3b82f6' },
+  OPS_REPAIR: { label: '运维报修', icon: 'SetUp', color: '#f59e0b', creatable: true },
+  ADMIN_PURCHASE: { label: '行政采购', icon: 'ShoppingCart', color: '#8b5cf6', creatable: true },
+  HR_LEAVE: { label: '人事请假', icon: 'Calendar', color: '#10b981', creatable: true },
+  TECH_REQUEST: { label: '技术需求', icon: 'Monitor', color: '#3b82f6', creatable: true },
   IT_SUPPORT: { label: 'IT支持', icon: 'Cpu', color: '#3b82f6' },
   ADMIN_AFFAIR: { label: '行政事务', icon: 'Briefcase', color: '#8b5cf6' }
 }

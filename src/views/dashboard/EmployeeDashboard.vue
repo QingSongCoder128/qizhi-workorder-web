@@ -44,7 +44,7 @@
         <div class="panel">
           <div class="panel-header">
             <span class="panel-title">最近工单</span>
-            <el-link type="primary" :underline="false" @click="$router.push('/workorder/my')">查看全部</el-link>
+            <el-link type="primary" underline="never" @click="$router.push('/workorder/my')">查看全部</el-link>
           </div>
           <div class="order-list">
             <div v-for="o in recentOrders" :key="o.id" class="order-item" @click="$router.push(`/workorder/detail/${o.id}`)">
@@ -54,7 +54,7 @@
               </div>
               <div class="order-sub">
                 <span class="order-no">{{ o.orderNo }}</span>
-                <el-tag v-if="isTimeout(o)" type="danger" size="small" effect="plain" round>超时</el-tag>
+                <el-tag v-if="isOrderTimeout(o)" type="danger" size="small" effect="plain" round>超时</el-tag>
                 <span class="order-time">{{ formatTime(o.createdAt) }}</span>
               </div>
             </div>
@@ -66,7 +66,7 @@
         <div class="panel">
           <div class="panel-header">
             <span class="panel-title">最新消息</span>
-            <el-link type="primary" :underline="false" @click="$router.push('/message')">消息中心</el-link>
+            <el-link type="primary" underline="never" @click="$router.push('/message')">消息中心</el-link>
           </div>
           <div class="msg-list">
             <div v-for="m in messages" :key="m.id" class="msg-item" @click="$router.push('/message')">

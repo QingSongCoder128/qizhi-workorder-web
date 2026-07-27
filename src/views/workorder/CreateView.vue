@@ -15,7 +15,9 @@
           <el-col :span="12">
             <el-form-item label="工单类型" prop="type">
               <el-select v-model="form.type" placeholder="请选择工单类型" style="width: 100%">
-                <el-option v-for="(v, k) in ORDER_TYPE" :key="k" :label="v.label" :value="k" />
+                <template v-for="(v, k) in ORDER_TYPE" :key="k">
+                  <el-option v-if="v.creatable" :label="v.label" :value="k" />
+                </template>
               </el-select>
             </el-form-item>
           </el-col>
