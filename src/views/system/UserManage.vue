@@ -12,8 +12,8 @@
           :prefix-icon="Search" @keyup.enter="fetchList" @clear="fetchList"
         />
         <el-select v-model="query.roleCode" placeholder="角色筛选" clearable style="width: 130px" @change="fetchList">
-          <el-option label="管理员" value="ADMIN" />
-          <el-option label="审批人" value="APPROVER" />
+          <el-option label="管理" value="ADMIN" />
+          <el-option label="审批" value="APPROVER" />
           <el-option label="员工" value="EMPLOYEE" />
         </el-select>
         <el-button type="primary" :icon="Search" @click="fetchList">查询</el-button>
@@ -122,10 +122,10 @@ import { User, Plus, Search } from '@element-plus/icons-vue'
 import { getUserList, createUser, updateUser, resetPassword, toggleUserStatus, getDeptList, getRoleList } from '@/api/user'
 
 const ROLE_MAP = {
-  ADMIN: { label: '管理员', color: '#ef4444' },
-  APPROVER: { label: '审批人', color: '#f59e0b' },
+  ADMIN: { label: '管理', color: '#ef4444' },
+  APPROVER: { label: '审批', color: '#f59e0b' },
   EMPLOYEE: { label: '员工', color: '#4f6ef7' },
-  SUBMITTER: { label: '提交人', color: '#4f6ef7' }
+  SUBMITTER: { label: '提交', color: '#4f6ef7' }
 }
 
 function roleColor(code) { return ROLE_MAP[code]?.color || '#64748b' }

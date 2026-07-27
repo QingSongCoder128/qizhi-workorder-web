@@ -64,7 +64,7 @@ const userStore = useUserStore()
 const messageStore = useMessageStore()
 
 const roleLabel = computed(() => {
-  const map = { ADMIN: '管理员', APPROVER: '审批人', EMPLOYEE: '员工' }
+  const map = { ADMIN: '管理', APPROVER: '审批', EMPLOYEE: '员工' }
   return map[userStore.role] || '用户'
 })
 

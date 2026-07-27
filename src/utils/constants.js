@@ -36,8 +36,8 @@ export const PRIORITY = {
 // 用户角色
 export const ROLES = {
   EMPLOYEE: '员工',
-  APPROVER: '审批人',
-  ADMIN: '管理员'
+  APPROVER: '审批',
+  ADMIN: '管理'
 }
 
 // 审批节点状态

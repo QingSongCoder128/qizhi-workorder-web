@@ -131,7 +131,7 @@ const pwdForm = reactive({ oldPassword: '', newPassword: '', confirmPassword: ''
 const fileInputRef = ref()
 const uploading = ref(false)
 
-const ROLE_MAP = { ADMIN: '管理员', APPROVER: '审批人', EMPLOYEE: '员工' }
+const ROLE_MAP = { ADMIN: '管理', APPROVER: '审批', EMPLOYEE: '员工' }
 const roleLabel = computed(() => ROLE_MAP[userStore.role] || userStore.role)
 const deptOptions = ref([])
 const deptName = computed(() => {
