@@ -19,6 +19,9 @@
             <el-option v-if="v.creatable" :label="v.label" :value="k" />
           </template>
         </el-select>
+        <el-select v-model="query.priority" placeholder="优先级" clearable style="width: 110px" @change="resetAndFetch">
+          <el-option v-for="(v, k) in PRIORITY" :key="k" :label="v.label" :value="k" />
+        </el-select>
         <el-button type="primary" :icon="Search" @click="fetchList">查询</el-button>
       </div>
 
@@ -80,7 +83,7 @@ import { ref, reactive, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { Search, Download } from '@element-plus/icons-vue'
-import { ORDER_STATUS, ORDER_TYPE } from '@/utils/constants'
+import { ORDER_STATUS, ORDER_TYPE, PRIORITY } from '@/utils/constants'
 import { getAllWorkOrders } from '@/api/workOrder'
 import { exportExcel } from '@/api/statistics'
 import { formatDate } from '@/utils/format'
@@ -92,7 +95,7 @@ const loading = ref(false)
 const exporting = ref(false)
 const tableData = ref([])
 const total = ref(0)
-const query = reactive({ keyword: '', status: '', type: '', page: 1, pageSize: 10 })
+const query = reactive({ keyword: '', status: '', type: '', priority: '', page: 1, pageSize: 10 })
 const route = useRoute()
 // 从工作台卡片跳转携带的多状态筛选（如 PENDING_AI,PENDING_APPROVE）
 const routeStatus = ref('')

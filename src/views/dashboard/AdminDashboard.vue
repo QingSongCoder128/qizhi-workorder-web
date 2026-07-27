@@ -232,7 +232,7 @@ import { isOrderTimeout } from '@/utils/time'
 const userStore = useUserStore()
 const rawOrders = ref([])
 const deptOptions = ref([])
-const dateRange = ref('30')
+const dateRange = ref('all')
 const deptFilter = ref('')
 const typeFilter = ref('')
 const exporting = ref(false)
