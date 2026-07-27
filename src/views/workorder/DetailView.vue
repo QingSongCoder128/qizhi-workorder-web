@@ -90,6 +90,17 @@
               </el-button>
               <span class="revoke-hint">仅待审批状态的工单可以撤销</span>
             </div>
+
+            <!-- 重试按钮（PENDING_AI 卡住时提交人一键重新触发） -->
+            <div v-if="detail.status === 'PENDING_AI'" class="retry-section">
+              <el-alert type="warning" :closable="false" show-icon style="margin-bottom: 12px;">
+                <template #title>工单处理异常，AI分析或审批链路未完成</template>
+                <p>请点击下方按钮重新触发处理流程，无需修改任何内容。</p>
+              </el-alert>
+              <el-button type="primary" :loading="retrying" @click="handleRetry">
+                <el-icon><RefreshRight /></el-icon> 重试处理
+              </el-button>
+            </div>
           </div>
 
           <!-- AI分析结果 -->
@@ -191,7 +202,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Edit, MagicStick, Stamp, CircleCheck, RefreshRight, RemoveFilled, User } from '@element-plus/icons-vue'
 import { ORDER_STATUS, ORDER_TYPE, AI_CATEGORY, DEPT_MAP, safeText } from '@/utils/constants'
-import { getWorkOrderDetail, resubmitWorkOrder, revokeWorkOrder, downloadAttachment } from '@/api/workOrder'
+import { getWorkOrderDetail, resubmitWorkOrder, revokeWorkOrder, retryWorkOrder, downloadAttachment } from '@/api/workOrder'
 import { getApprovalRecordsByWorkOrder } from '@/api/approve'
 import { getUserList } from '@/api/user'
 import { useUserStore } from '@/store/user'
@@ -213,6 +224,7 @@ const submitterInfo = ref({})
 const resubmitVisible = ref(false)
 const resubmitting = ref(false)
 const resubmitForm = reactive({ title: '', detail: '', urgent: false })
+const retrying = ref(false)
 
 const currentStep = computed(() => {
   const s = detail.value.status
@@ -268,7 +280,7 @@ const currentApproverName = computed(() =>
   currentApprovalNode.value?.approverName || detail.value.currentApproverName || ''
 )
 
-onMounted(async () => {
+async function fetchDetail() {
   loading.value = true
   try {
     const res = await getWorkOrderDetail(route.params.id)
@@ -293,7 +305,9 @@ onMounted(async () => {
   } catch {} finally {
     loading.value = false
   }
-})
+}
+
+onMounted(() => fetchDetail())
 
 onUnmounted(() => {
   attachmentItems.value.forEach(item => URL.revokeObjectURL(item.objectUrl))
@@ -331,6 +345,19 @@ async function handleRevoke() {
     ElMessage.success('工单已撤销')
     router.push('/workorder/my')
   } catch {}
+}
+
+async function handleRetry() {
+  retrying.value = true
+  try {
+    await retryWorkOrder(route.params.id)
+    ElMessage.success('重试成功，工单已重新进入审批流程')
+    fetchDetail()
+  } catch {
+    // 错误已在拦截器处理
+  } finally {
+    retrying.value = false
+  }
 }
 </script>
 

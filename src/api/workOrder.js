@@ -25,6 +25,11 @@ export function revokeWorkOrder(id) {
   return request.post(`/api/v1/workorder/${id}/revoke`)
 }
 
+// 重试处理（PENDING_AI 卡住时一键重新触发）
+export function retryWorkOrder(id) {
+  return request.post(`/api/v1/workorder/${id}/retry`)
+}
+
 // 重新提交（驳回后修改再提交）
 export function resubmitWorkOrder(id, data) {
   return request.put(`/api/v1/workorder/${id}/resubmit`, data)

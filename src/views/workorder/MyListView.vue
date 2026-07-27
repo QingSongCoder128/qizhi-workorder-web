@@ -82,10 +82,11 @@
         <el-table-column prop="createdAt" label="提交时间" width="160">
           <template #default="{ row }">{{ formatDate(row.createdAt) }}</template>
         </el-table-column>
-        <el-table-column label="操作" width="130" fixed="right">
+        <el-table-column label="操作" width="160" fixed="right">
           <template #default="{ row }">
             <div class="table-actions">
               <el-button link type="primary" size="small" @click.stop="$router.push(`/workorder/detail/${row.id}`)">详情</el-button>
+              <el-button v-if="row.status === 'PENDING_AI'" link type="danger" size="small" @click.stop="handleRetry(row)">重试</el-button>
               <el-button v-if="row.status === 'REJECTED'" link type="warning" size="small" @click.stop="openResubmit(row)">重新提交</el-button>
             </div>
           </template>
@@ -136,10 +137,10 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
 import { ORDER_STATUS, ORDER_TYPE, PRIORITY, AI_CATEGORY } from '@/utils/constants'
-import { getMyWorkOrders, resubmitWorkOrder } from '@/api/workOrder'
+import { getMyWorkOrders, resubmitWorkOrder, retryWorkOrder } from '@/api/workOrder'
 import { formatDate } from '@/utils/format'
 import StatusTag from '@/components/StatusTag.vue'
 import PriorityTag from '@/components/PriorityTag.vue'
@@ -201,6 +202,23 @@ async function doResubmit() {
     ElMessage.error('提交失败')
   } finally {
     resubmitting.value = false
+  }
+}
+
+async function handleRetry(row) {
+  try {
+    await ElMessageBox.confirm(
+      '工单处理异常，是否重新触发AI分析与审批流程？',
+      '重试确认',
+      { confirmButtonText: '确认重试', cancelButtonText: '取消', type: 'warning' }
+    )
+  } catch { return }
+  try {
+    await retryWorkOrder(row.id)
+    ElMessage.success('重试成功，工单已重新进入审批流程')
+    fetchList()
+  } catch {
+    // 错误已在拦截器处理
   }
 }
 </script>

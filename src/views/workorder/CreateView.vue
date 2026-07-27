@@ -26,7 +26,7 @@
         <el-row :gutter="24">
           <el-col :span="12">
             <el-form-item label="所属部门" prop="departmentCode">
-              <el-select v-model="form.departmentCode" placeholder="请选择部门" style="width: 100%">
+              <el-select v-model="form.departmentCode" disabled style="width: 100%">
                 <el-option v-for="d in deptOptions" :key="d.deptCode" :label="d.deptName" :value="d.deptCode" />
               </el-select>
             </el-form-item>
@@ -91,6 +91,9 @@ import { ORDER_TYPE } from '@/utils/constants'
 import { submitWorkOrder } from '@/api/workOrder'
 import { getDeptList } from '@/api/user'
 import { getSessionId } from '@/utils/auth'
+import { useUserStore } from '@/store/user'
+
+const userStore = useUserStore()
 
 const router = useRouter()
 const formRef = ref()
@@ -101,6 +104,7 @@ const deptOptions = ref([])
 
 // 部门下拉动态获取（SRS 场景二：关联部门下拉列表从 user-service 获取）
 onMounted(async () => {
+  form.departmentCode = userStore.deptCode
   try {
     const res = await getDeptList()
     deptOptions.value = (res.data || []).filter(d => d.status !== 'DISABLED')
@@ -159,6 +163,7 @@ async function handleSubmit() {
 
 function handleReset() {
   formRef.value?.resetFields()
+  form.departmentCode = userStore.deptCode
   form.urgent = false
   fileList.value = []
   attachments.value = []
