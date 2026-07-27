@@ -75,7 +75,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Bell, Check, Delete } from '@element-plus/icons-vue'
@@ -120,6 +120,24 @@ const groupedMessages = computed(() => {
 onMounted(() => {
   fetchList()
   fetchUnreadCount()
+  startPolling()
+})
+
+// 轮询：每5秒自动刷新未读数和列表
+let pollTimer = null
+function startPolling() {
+  pollTimer = setInterval(async () => {
+    const prev = unreadTotal.value
+    await fetchUnreadCount()
+    // 未读数变化时自动刷新列表
+    if (unreadTotal.value !== prev) {
+      fetchList()
+    }
+  }, 5000)
+}
+
+onUnmounted(() => {
+  if (pollTimer) clearInterval(pollTimer)
 })
 
 async function fetchUnreadCount() {
