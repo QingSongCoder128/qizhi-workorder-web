@@ -101,6 +101,9 @@
                         <el-icon><component :is="row.status === 'ENABLED' ? 'Lock' : 'Unlock'" /></el-icon>
                         {{ row.status === 'ENABLED' ? '停用' : '启用' }}
                       </el-dropdown-item>
+                      <el-dropdown-item command="delete" divided style="color: #e05252;">
+                        <el-icon><Delete /></el-icon>删除用户
+                      </el-dropdown-item>
                     </el-dropdown-menu>
                   </template>
                 </el-dropdown>
@@ -132,27 +135,51 @@
     </section>
 
     <!-- 新增/编辑弹窗 -->
-    <el-dialog v-model="dialogVisible" :title="editingId ? '编辑用户' : '新增用户'" width="500px">
-      <el-form :model="form" label-width="80px">
-        <el-form-item label="账号"><el-input v-model="form.username" :disabled="!!editingId" autocomplete="off" /></el-form-item>
-        <el-form-item v-if="!editingId" label="密码"><el-input v-model="form.password" type="password" autocomplete="new-password" /></el-form-item>
-        <el-form-item label="姓名"><el-input v-model="form.realName" /></el-form-item>
-        <el-form-item label="手机号"><el-input v-model="form.phone" /></el-form-item>
-        <el-form-item label="邮箱"><el-input v-model="form.email" /></el-form-item>
-        <el-form-item label="部门">
-          <el-select v-model="form.deptCode" style="width: 100%;">
-            <el-option v-for="d in deptList" :key="d.deptCode" :label="d.deptName" :value="d.deptCode" />
-          </el-select>
+    <el-dialog v-model="dialogVisible" :title="editingId ? '编辑用户' : '新增用户'" width="580px" class="user-dialog" :close-on-click-modal="false">
+      <template #header>
+        <div class="dialog-header">
+          <h3>{{ editingId ? '编辑用户' : '新增用户' }}</h3>
+          <p>{{ editingId ? '修改用户基本信息与角色分配' : '创建一个新的系统账号' }}</p>
+        </div>
+      </template>
+      <el-form ref="formRef" :model="form" :rules="formRules" label-position="top" class="user-form">
+        <div class="form-row">
+          <el-form-item label="账号" prop="username" class="flex-1">
+            <el-input v-model="form.username" :disabled="!!editingId" autocomplete="off" placeholder="登录账号，如 zhangsan" :prefix-icon="User" />
+          </el-form-item>
+          <el-form-item v-if="!editingId" label="密码" prop="password" class="flex-1">
+            <el-input v-model="form.password" type="password" autocomplete="new-password" placeholder="至少8位，含大小写+数字" show-password :prefix-icon="Key" />
+          </el-form-item>
+        </div>
+        <el-form-item label="姓名" prop="realName">
+          <el-input v-model="form.realName" placeholder="真实姓名" />
         </el-form-item>
-        <el-form-item label="角色">
-          <el-select v-model="form.roleCode" style="width: 100%;">
-            <el-option v-for="r in roleList" :key="r.roleCode" :label="r.roleName" :value="r.roleCode" />
-          </el-select>
-        </el-form-item>
+        <div class="form-row">
+          <el-form-item label="手机号" prop="phone" class="flex-1">
+            <el-input v-model="form.phone" placeholder="11位手机号" maxlength="11" />
+          </el-form-item>
+          <el-form-item label="邮箱" class="flex-1">
+            <el-input v-model="form.email" placeholder="选填" />
+          </el-form-item>
+        </div>
+        <div class="form-row">
+          <el-form-item label="部门" prop="deptCode" class="flex-1">
+            <el-select v-model="form.deptCode" placeholder="请选择部门" style="width: 100%;">
+              <el-option v-for="d in deptList" :key="d.deptCode" :label="d.deptName" :value="d.deptCode" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="角色" prop="roleCode" class="flex-1">
+            <el-select v-model="form.roleCode" placeholder="请选择角色" style="width: 100%;">
+              <el-option v-for="r in roleList" :key="r.roleCode" :label="r.roleName" :value="r.roleCode" />
+            </el-select>
+          </el-form-item>
+        </div>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="saving" @click="handleSave">保存</el-button>
+        <div class="dialog-footer">
+          <el-button @click="dialogVisible = false" round>取消</el-button>
+          <el-button type="primary" :loading="saving" @click="handleSave" round>{{ editingId ? '保存修改' : '确认创建' }}</el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -161,8 +188,8 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { User, UserFilled, Plus, Search, Refresh, Download, Grid, ArrowDown, Key, Lock, Unlock, CircleCheck, CircleClose } from '@element-plus/icons-vue'
-import { getUserList, createUser, updateUser, resetPassword, toggleUserStatus, getDeptList, getRoleList, getUserStats, exportUsers, batchUserOperation } from '@/api/user'
+import { User, UserFilled, Plus, Search, Refresh, Download, Grid, ArrowDown, Key, Lock, Unlock, CircleCheck, CircleClose, Delete } from '@element-plus/icons-vue'
+import { getUserList, createUser, updateUser, resetPassword, toggleUserStatus, getDeptList, getRoleList, getUserStats, exportUsers, batchUserOperation, deleteUser } from '@/api/user'
 
 const ROLE_MAP = {
   ADMIN: { label: '管理', cls: 'role-admin' },
@@ -183,9 +210,19 @@ const roleList = ref([])
 const dialogVisible = ref(false)
 const editingId = ref(null)
 const selectedRows = ref([])
+const formRef = ref(null)
 const stats = reactive({ total: 0, enabled: 0, disabled: 0 })
 const query = reactive({ page: 1, pageSize: 10, keyword: '', roleCode: '', deptCode: '' })
 const form = reactive({ username: '', password: '', realName: '', phone: '', email: '', deptCode: '', roleCode: '' })
+
+const formRules = computed(() => ({
+  username: [{ required: true, message: '请输入登录账号', trigger: 'submit' }],
+  password: editingId.value ? [] : [{ required: true, message: '请设置密码', trigger: 'submit' }],
+  realName: [{ required: true, message: '请输入姓名', trigger: 'submit' }],
+  phone: [{ pattern: /^1\d{10}$/, message: '请输入正确的11位手机号', trigger: 'submit' }],
+  deptCode: [{ required: true, message: '请选择部门', trigger: 'submit' }],
+  roleCode: [{ required: true, message: '请选择角色', trigger: 'submit' }]
+}))
 
 const statsCards = computed(() => [
   { label: '全部用户', value: stats.total, meta: '系统注册用户总数', icon: UserFilled, tone: 'blue' },
@@ -240,6 +277,7 @@ function openDialog(row) {
 }
 
 async function handleSave() {
+  try { await formRef.value.validate() } catch { return }
   saving.value = true
   try {
     if (editingId.value) {
@@ -259,6 +297,7 @@ async function handleSave() {
 function handleMoreCommand(command, row) {
   if (command === 'reset') handleReset(row)
   else if (command === 'disable' || command === 'enable') handleToggle(row)
+  else if (command === 'delete') handleDelete(row)
 }
 
 async function handleReset(row) {
@@ -275,6 +314,16 @@ async function handleToggle(row) {
     await ElMessageBox.confirm(`确定${action}用户「${row.realName || row.username}」吗？`, `确认${action}`)
     await toggleUserStatus(row.id, row.status === 'ENABLED' ? 0 : 1)
     ElMessage.success(`已${action}用户「${row.realName || row.username}」`)
+    fetchList()
+    fetchStats()
+  } catch {}
+}
+
+async function handleDelete(row) {
+  try {
+    await ElMessageBox.confirm(`确定删除用户「${row.realName || row.username}」吗？删除后不可恢复。`, '删除确认', { type: 'warning', confirmButtonText: '确定删除', cancelButtonText: '取消' })
+    await deleteUser(row.id)
+    ElMessage.success('用户已删除')
     fetchList()
     fetchStats()
   } catch {}
@@ -420,5 +469,26 @@ async function handleBatch(action) {
   padding: 40px 0; text-align: center; color: #9aa8c0;
   .empty-icon { margin-bottom: 10px; }
   p { margin: 0; font-size: 14px; }
+}
+
+/* Dialog */
+:deep(.user-dialog) {
+  border-radius: 16px;
+  .el-dialog__header { padding: 24px 28px 0; margin: 0; }
+  .el-dialog__body { padding: 20px 28px; }
+  .el-dialog__footer { padding: 0 28px 24px; }
+}
+.dialog-header {
+  h3 { margin: 0 0 3px; font-size: 17px; color: #1a2b42; font-weight: 700; }
+  p { margin: 0; font-size: 12.5px; color: #94a3b8; }
+}
+.user-form {
+  .form-row { display: flex; gap: 16px; }
+  .flex-1 { flex: 1; }
+  .el-form-item { margin-bottom: 18px; }
+  .el-form-item__label { font-size: 13px; color: #4a5b76; font-weight: 500; padding-bottom: 6px; }
+}
+.dialog-footer {
+  display: flex; justify-content: flex-end; gap: 12px;
 }
 </style>

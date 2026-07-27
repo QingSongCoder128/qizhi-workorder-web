@@ -78,9 +78,18 @@ request.interceptors.response.use(
   response => {
     // 请求完成，移出待处理队列
     if (response.config._requestId) pendingRequests.delete(response.config._requestId)
-    // Blob 响应（文件下载）直接返回
+    // Blob 响应（文件下载）：检查是否实际是 JSON 错误响应
     if (response.config.responseType === 'blob') {
-      return response.data
+      const blob = response.data
+      if (blob.type && blob.type.includes('application/json')) {
+        // 后端返回了 JSON 错误体，解析并拒绝
+        return blob.text().then(text => {
+          const res = JSON.parse(text)
+          ElMessage.error(res.msg || '请求失败')
+          return Promise.reject(new Error(res.msg))
+        })
+      }
+      return blob
     }
     const res = response.data
     if (res.code !== 200) {

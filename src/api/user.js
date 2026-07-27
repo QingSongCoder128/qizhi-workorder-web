@@ -106,3 +106,7 @@ export function exportUsers(params) {
 export function batchUserOperation(data) {
   return request.put('/api/v1/user/batch', data)
 }
+
+export function deleteUser(id) {
+  return request.delete(`/api/v1/user/${id}`)
+}
