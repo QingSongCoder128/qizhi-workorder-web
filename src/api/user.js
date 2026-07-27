@@ -65,6 +65,21 @@ export function updateRole(id, data) {
   return request.put(`/api/v1/role/${id}`, data)
 }
 
+// 全部权限列表
+export function getAllPermissions() {
+  return request.get('/api/v1/role/permissions')
+}
+
+// 角色已分配权限
+export function getRolePermissions(id) {
+  return request.get(`/api/v1/role/${id}/permissions`)
+}
+
+// 更新角色权限
+export function updateRolePermissions(id, codes) {
+  return request.put(`/api/v1/role/${id}/permissions`, codes)
+}
+
 // 当前登录用户信息
 export function getCurrentUser() {
   return request.get('/api/v1/user/me')

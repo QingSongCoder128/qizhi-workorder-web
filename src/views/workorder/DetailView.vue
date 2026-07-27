@@ -276,7 +276,7 @@ onMounted(async () => {
     await loadAttachments(detail.value.attachments || [])
     statusHistory.value = res.data?.statusHistory || []
     // 提交人：按账号名查用户服务获取真实姓名与联系方式（仅管理员可查，非管理员自动降级为账号名）
-    if (detail.value.submitterName && userStore.role === 'ADMIN') {
+    if (detail.value.submitterName && userStore.permissions.includes('user:manage')) {
       try {
         const uRes = await getUserList({ keyword: detail.value.submitterName, page: 1, pageSize: 50 })
         const matched = (uRes.data?.records || []).find(u => u.username === detail.value.submitterName)

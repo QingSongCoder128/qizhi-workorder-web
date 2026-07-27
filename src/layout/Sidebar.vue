@@ -10,7 +10,7 @@
     <el-scrollbar class="sidebar-menu-wrap">
       <nav class="sidebar-nav">
         <!-- 工作台 -->
-        <div class="nav-section">
+        <div v-if="hasPerm('stats:view')" class="nav-section">
           <router-link to="/dashboard" class="nav-item" :class="{ active: $route.path === '/dashboard' }">
             <el-icon :size="18"><Odometer /></el-icon>
             <span v-show="!collapsed" class="nav-label">工作台</span>
@@ -18,38 +18,38 @@
         </div>
 
         <!-- 工单 -->
-        <div class="nav-section">
+        <div v-if="hasPerm('workorder:submit') || hasPerm('workorder:view') || hasPerm('workorder:admin')" class="nav-section">
           <p v-show="!collapsed" class="nav-group-title">工单管理</p>
-          <router-link to="/workorder/create" class="nav-item" :class="{ active: $route.path === '/workorder/create' }">
+          <router-link v-if="hasPerm('workorder:submit')" to="/workorder/create" class="nav-item" :class="{ active: $route.path === '/workorder/create' }">
             <el-icon :size="18"><EditPen /></el-icon>
             <span v-show="!collapsed" class="nav-label">新建工单</span>
           </router-link>
-          <router-link to="/workorder/my" class="nav-item" :class="{ active: $route.path.startsWith('/workorder/my') || $route.path.startsWith('/workorder/detail') }">
+          <router-link v-if="hasPerm('workorder:view')" to="/workorder/my" class="nav-item" :class="{ active: $route.path.startsWith('/workorder/my') || $route.path.startsWith('/workorder/detail') }">
             <el-icon :size="18"><Document /></el-icon>
             <span v-show="!collapsed" class="nav-label">我的工单</span>
           </router-link>
-          <router-link v-if="isAdmin" to="/workorder/all" class="nav-item" :class="{ active: $route.path === '/workorder/all' }">
+          <router-link v-if="hasPerm('workorder:admin')" to="/workorder/all" class="nav-item" :class="{ active: $route.path === '/workorder/all' }">
             <el-icon :size="18"><Files /></el-icon>
             <span v-show="!collapsed" class="nav-label">全部工单</span>
           </router-link>
         </div>
 
         <!-- 审批 -->
-        <div v-if="isApproverOrAdmin" class="nav-section">
+        <div v-if="hasPerm('workorder:approve') || hasPerm('template:manage')" class="nav-section">
           <p v-show="!collapsed" class="nav-group-title">审批中心</p>
-          <router-link to="/approve/pending" class="nav-item" :class="{ active: $route.path.startsWith('/approve/pending') || $route.path.startsWith('/approve/detail') }">
+          <router-link v-if="hasPerm('workorder:approve')" to="/approve/pending" class="nav-item" :class="{ active: $route.path.startsWith('/approve/pending') || $route.path.startsWith('/approve/detail') }">
             <el-icon :size="18"><Checked /></el-icon>
             <span v-show="!collapsed" class="nav-label">待审批</span>
             <span v-if="!collapsed && pendingCount > 0" class="nav-badge">{{ pendingCount > 99 ? '99+' : pendingCount }}</span>
           </router-link>
-          <router-link v-if="isAdmin" to="/approve/template" class="nav-item" :class="{ active: $route.path === '/approve/template' }">
+          <router-link v-if="hasPerm('template:manage')" to="/approve/template" class="nav-item" :class="{ active: $route.path === '/approve/template' }">
             <el-icon :size="18"><SetUp /></el-icon>
             <span v-show="!collapsed" class="nav-label">审批模板</span>
           </router-link>
         </div>
 
         <!-- 消息 -->
-        <div class="nav-section">
+        <div v-if="hasPerm('message:view')" class="nav-section">
           <router-link to="/message" class="nav-item" :class="{ active: $route.path === '/message' }">
             <el-icon :size="18"><Bell /></el-icon>
             <span v-show="!collapsed" class="nav-label">消息中心</span>
@@ -58,29 +58,29 @@
         </div>
 
         <!-- 系统管理 -->
-        <div v-if="isAdmin" class="nav-section">
+        <div v-if="hasAnyPerm(['user:manage','dept:manage','role:manage','deadletter:manage','config:manage'])" class="nav-section">
           <p v-show="!collapsed" class="nav-group-title">系统管理</p>
-          <router-link to="/system/user" class="nav-item" :class="{ active: $route.path === '/system/user' }">
+          <router-link v-if="hasPerm('user:manage')" to="/system/user" class="nav-item" :class="{ active: $route.path === '/system/user' }">
             <el-icon :size="18"><User /></el-icon>
             <span v-show="!collapsed" class="nav-label">用户管理</span>
           </router-link>
-          <router-link to="/system/dept" class="nav-item" :class="{ active: $route.path === '/system/dept' }">
+          <router-link v-if="hasPerm('dept:manage')" to="/system/dept" class="nav-item" :class="{ active: $route.path === '/system/dept' }">
             <el-icon :size="18"><OfficeBuilding /></el-icon>
             <span v-show="!collapsed" class="nav-label">部门管理</span>
           </router-link>
-          <router-link to="/system/role" class="nav-item" :class="{ active: $route.path === '/system/role' }">
+          <router-link v-if="hasPerm('role:manage')" to="/system/role" class="nav-item" :class="{ active: $route.path === '/system/role' }">
             <el-icon :size="18"><Avatar /></el-icon>
             <span v-show="!collapsed" class="nav-label">角色管理</span>
           </router-link>
-          <router-link to="/system/dead-letter" class="nav-item" :class="{ active: $route.path === '/system/dead-letter' }">
+          <router-link v-if="hasPerm('deadletter:manage')" to="/system/dead-letter" class="nav-item" :class="{ active: $route.path === '/system/dead-letter' }">
             <el-icon :size="18"><WarningFilled /></el-icon>
             <span v-show="!collapsed" class="nav-label">死信管理</span>
           </router-link>
-          <router-link v-if="canManageConfig" to="/system/ai-config" class="nav-item" :class="{ active: $route.path === '/system/ai-config' }">
+          <router-link v-if="hasPerm('config:manage')" to="/system/ai-config" class="nav-item" :class="{ active: $route.path === '/system/ai-config' }">
             <el-icon :size="18"><Cpu /></el-icon>
             <span v-show="!collapsed" class="nav-label">AI 配置</span>
           </router-link>
-          <router-link v-if="canManageConfig" to="/system/rate-limit" class="nav-item" :class="{ active: $route.path === '/system/rate-limit' }">
+          <router-link v-if="hasPerm('config:manage')" to="/system/rate-limit" class="nav-item" :class="{ active: $route.path === '/system/rate-limit' }">
             <el-icon :size="18"><Timer /></el-icon>
             <span v-show="!collapsed" class="nav-label">限流配置</span>
           </router-link>
@@ -104,10 +104,15 @@ const route = useRoute()
 const userStore = useUserStore()
 const messageStore = useMessageStore()
 
-const isAdmin = computed(() => userStore.role === 'ADMIN')
-const isApproverOrAdmin = computed(() => ['APPROVER', 'ADMIN'].includes(userStore.role))
-const canManageConfig = computed(() => userStore.permissions.includes('config:manage'))
 const unreadCount = computed(() => messageStore.unreadCount || 0)
+
+// 权限判断工具
+function hasPerm(code) {
+  return userStore.permissions.includes(code)
+}
+function hasAnyPerm(codes) {
+  return codes.some(c => userStore.permissions.includes(c))
+}
 
 // 待审批角标：审批人/管理员登录后可见的真实待办数（approve-service pending/stats）
 const pendingCount = ref(0)
@@ -117,7 +122,7 @@ async function fetchPendingCount() {
     pendingCount.value = 0
     return
   }
-  if (!['APPROVER', 'ADMIN'].includes(userStore.role)) {
+  if (!userStore.permissions.includes('workorder:approve')) {
     pendingCount.value = 0
     return
   }

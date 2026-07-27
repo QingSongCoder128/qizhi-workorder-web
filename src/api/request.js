@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
-import { getSessionId, getRole, removeSessionId } from '@/utils/auth'
+import { getSessionId, getPermissions, removeSessionId } from '@/utils/auth'
 import router from '@/router'
 
 const request = axios.create({
@@ -22,18 +22,23 @@ export function cancelAllRequests() {
 }
 
 function roleScopedUrl(url) {
-  const role = getRole()
-  const namespace = role === 'ADMIN' ? 'admin' : role === 'APPROVER' ? 'approver' : 'employee'
+  const perms = getPermissions()
+  const has = (code) => perms.includes(code)
+  // 根据权限码动态决定 API 命名空间（admin > approver > employee）
+  const workorderNs = has('workorder:admin') ? 'admin' : 'employee'
+  const approveNs = has('workorder:approve') ? 'approver' : 'employee'
+  const deptNs = has('dept:manage') ? 'admin' : 'employee'
+  const userNs = has('user:manage') ? 'admin' : 'employee'
   const mappings = [
     ['/api/v1/approve/template', '/api/v1/admin/approval-templates'],
     ['/api/v1/message/dead-letter', '/api/v1/admin/dead-letters'],
-    ['/api/v1/workorder', `/api/v1/${namespace}/workorders`],
-    ['/api/v1/approve', `/api/v1/${namespace}/approvals`],
-    ['/api/v1/message', `/api/v1/${namespace}/messages`],
+    ['/api/v1/workorder', `/api/v1/${workorderNs}/workorders`],
+    ['/api/v1/approve', `/api/v1/${approveNs}/approvals`],
+    ['/api/v1/message', `/api/v1/${userNs}/messages`],
     ['/api/v1/stats', '/api/v1/admin/stats'],
-    ['/api/v1/dept', role === 'ADMIN' ? '/api/v1/admin/departments' : `/api/v1/${namespace}/departments`],
+    ['/api/v1/dept', `/api/v1/${deptNs}/departments`],
     ['/api/v1/role', '/api/v1/admin/roles'],
-    ['/api/v1/user', role === 'ADMIN' ? '/api/v1/admin/users' : `/api/v1/${namespace}/user`],
+    ['/api/v1/user', userNs === 'admin' ? '/api/v1/admin/users' : `/api/v1/${userNs}/user`],
     ['/api/v1/ai', '/api/v1/admin/ai']
   ]
   for (const [legacy, scoped] of mappings) {
