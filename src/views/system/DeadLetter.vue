@@ -42,7 +42,8 @@
           <template #default="{ row }">
             <div class="dlq-biz">
               <span class="dlq-biz__title">{{ bizTitle(row) }}</span>
-              <span class="dlq-biz__id">{{ bizIdText(row) }}</span>
+              <span v-if="bizId(row)" class="dlq-biz__link" @click="goOrder(bizId(row))">工单 #{{ bizId(row) }}</span>
+              <span v-else class="dlq-biz__id">{{ bizIdText(row) }}</span>
             </div>
           </template>
         </el-table-column>
@@ -102,12 +103,14 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { WarningFilled, CircleCheckFilled } from '@element-plus/icons-vue'
 import { getDeadLetterList, retryDeadLetter } from '@/api/message'
 import { MSG_TYPE, DLQ_STATUS } from '@/utils/constants'
 import { formatDate } from '@/utils/format'
 
+const router = useRouter()
 const loading = ref(false)
 const retryingId = ref(null)
 const tableData = ref([])
@@ -152,19 +155,28 @@ function msgTypeColor(row) {
   return MSG_TYPE[key]?.color || '#64748b'
 }
 
-// 业务对象标题：优先取 messageBody.title
+// 业务对象标题：优先取 messageBody.title，兜底按消息类型生成
 function bizTitle(row) {
   const body = parseBody(row)
-  return body.title || '—'
+  if (body.title) return body.title
+  const key = msgTypeKey(row)
+  return MSG_TYPE[key]?.label || '系统消息'
 }
 
 // 业务对象标识：bizId / workOrderId / receiverId
+function bizId(row) {
+  const body = parseBody(row)
+  return body.bizId || body.workOrderId || null
+}
+
 function bizIdText(row) {
   const body = parseBody(row)
-  if (body.bizId != null) return `工单 #${body.bizId}`
-  if (body.workOrderId != null) return `工单 #${body.workOrderId}`
   if (body.receiverId != null) return `接收人 #${body.receiverId}`
   return ''
+}
+
+function goOrder(id) {
+  router.push(`/workorder/detail/${id}`)
 }
 
 async function fetchList() {
@@ -232,6 +244,16 @@ async function handleRetry(row) {
     font-family: $font-mono;
     font-size: $text-xs;
     color: $text-muted;
+  }
+
+  &__link {
+    font-family: $font-mono;
+    font-size: $text-xs;
+    color: $brand;
+    cursor: pointer;
+    &:hover {
+      text-decoration: underline;
+    }
   }
 }
 
