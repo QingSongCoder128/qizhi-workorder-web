@@ -87,7 +87,6 @@
             <div class="table-actions">
               <el-button link type="primary" size="small" @click.stop="$router.push(`/workorder/detail/${row.id}`)">详情</el-button>
               <el-button v-if="row.status === 'PENDING_AI'" link type="danger" size="small" @click.stop="handleRetry(row)">重试</el-button>
-              <el-button v-if="row.status === 'REJECTED'" link type="warning" size="small" @click.stop="openResubmit(row)">重新提交</el-button>
             </div>
           </template>
         </el-table-column>
@@ -113,24 +112,6 @@
       />
     </div>
 
-    <!-- 重新提交弹窗 -->
-    <el-dialog v-model="resubmitVisible" title="重新提交工单" width="560px" destroy-on-close>
-      <el-form :model="resubmitForm" label-width="80px">
-        <el-form-item label="工单标题">
-          <el-input v-model="resubmitForm.title" maxlength="100" show-word-limit />
-        </el-form-item>
-        <el-form-item label="详情描述">
-          <el-input v-model="resubmitForm.detail" type="textarea" :rows="4" maxlength="2000" show-word-limit />
-        </el-form-item>
-        <el-form-item label="紧急标记">
-          <el-switch v-model="resubmitForm.urgent" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="resubmitVisible = false">取消</el-button>
-        <el-button type="primary" :loading="resubmitting" @click="doResubmit">确认提交</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -140,7 +121,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Search } from '@element-plus/icons-vue'
 import { ORDER_STATUS, ORDER_TYPE, PRIORITY, AI_CATEGORY } from '@/utils/constants'
-import { getMyWorkOrders, resubmitWorkOrder, retryWorkOrder } from '@/api/workOrder'
+import { getMyWorkOrders, retryWorkOrder } from '@/api/workOrder'
 import { formatDate } from '@/utils/format'
 import StatusTag from '@/components/StatusTag.vue'
 import PriorityTag from '@/components/PriorityTag.vue'
@@ -153,12 +134,6 @@ const total = ref(0)
 const filterStatuses = { PENDING_APPROVE: ORDER_STATUS.PENDING_APPROVE, APPROVING: ORDER_STATUS.APPROVING, APPROVED: ORDER_STATUS.APPROVED, COMPLETED: ORDER_STATUS.COMPLETED, REJECTED: ORDER_STATUS.REJECTED }
 
 const query = reactive({ status: '', type: '', priority: '', keyword: '', page: 1, pageSize: 10 })
-
-// 重新提交
-const resubmitVisible = ref(false)
-const resubmitting = ref(false)
-const resubmitId = ref(null)
-const resubmitForm = reactive({ title: '', detail: '', urgent: false })
 
 onMounted(() => fetchList())
 
@@ -181,28 +156,6 @@ function switchTab(status) {
 
 function goDetail(row) {
   router.push(`/workorder/detail/${row.id}`)
-}
-
-function openResubmit(row) {
-  resubmitId.value = row.id
-  resubmitForm.title = row.title
-  resubmitForm.detail = row.detail
-  resubmitForm.urgent = !!row.urgent
-  resubmitVisible.value = true
-}
-
-async function doResubmit() {
-  resubmitting.value = true
-  try {
-    await resubmitWorkOrder(resubmitId.value, resubmitForm)
-    ElMessage.success('重新提交成功')
-    resubmitVisible.value = false
-    fetchList()
-  } catch {
-    ElMessage.error('提交失败')
-  } finally {
-    resubmitting.value = false
-  }
 }
 
 async function handleRetry(row) {
